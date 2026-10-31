@@ -1,0 +1,46 @@
+# Переименуйте этот файл в .gitignore (с точкой в начале) и положите в корень Unity-проекта,
+# рядом с папками Assets, Packages и ProjectSettings.
+
+# Служебные папки Unity (создаются заново сами)
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# Файлы редакторов и решений (Visual Studio, VS Code, Rider)
+/.vs/
+/.idea/
+/.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Сборки
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# Автосгенерированный код Unity
+sysinfo.txt
+crashlytics-build.properties

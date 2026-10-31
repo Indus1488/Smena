@@ -1,0 +1,227 @@
+using UnityEngine;
+using UnityEngine.Events;
+
+public enum OrderType { None, FBS, FBO }
+
+// Коробка селлера. Путь коробки:
+// 1) замер рулеткой (длина, ширина, высота) -> 2) выбор цены на телефоне -> 3) сделка ->
+// 4) задание: FBS (клеить стикеры на доску) или FBO (проверить QR на коробке) -> 5) коробка готова.
+[RequireComponent(typeof(Interactable))]
+public class MeasurableBox : MonoBehaviour
+{
+    public static MeasurableBox ActiveFbsBox;   // коробка, для которой сейчас нужны стикеры
+
+    public int lengthCm, widthCm, heightCm;
+    public int basePrice;
+    public bool measured;
+    public OrderType order;
+    public int workLeft;
+    public Material labelMaterial;              // белая этикетка для QR (задаёт BoxSpawner)
+
+    int step;   // 0 длина, 1 ширина, 2 высота, 3 выбор цены, 4 сделка отклонена, 5 работа, 6 готово
+    Interactable it;
+
+    public int WorkLeft { get { return workLeft; } }
+
+    void Awake()
+    {
+        it = GetComponent<Interactable>();
+        if (it.onInteract == null) it.onInteract = new UnityEvent();
+        it.onInteract.AddListener(OnInteract);
+
+        // Размеры берём из масштаба куба (1 единица = 1 метр)
+        Vector3 s = transform.localScale;
+        lengthCm = Mathf.RoundToInt(Mathf.Max(s.x, s.z) * 100f);
+        widthCm = Mathf.RoundToInt(Mathf.Min(s.x, s.z) * 100f);
+        heightCm = Mathf.RoundToInt(s.y * 100f);
+
+        // Цена зависит от объёма: 100 руб. + 3 руб. за литр, округляем до десятков
+        float liters = lengthCm * widthCm * heightCm / 1000f;
+        basePrice = Mathf.RoundToInt((100f + liters * 3f) / 10f) * 10;
+
+        UpdatePrompt();
+    }
+
+    void OnDestroy()
+    {
+        if (ActiveFbsBox == this) ActiveFbsBox = null;
+    }
+
+    void Update()
+    {
+        // Пока не измерили первое, подсказка меняется, когда игрок берёт рулетку
+        if (step == 0) UpdatePrompt();
+    }
+
+    void UpdatePrompt()
+    {
+        switch (step)
+        {
+            case 0: it.prompt = Inventory.hasTape ? "E — измерить длину" : "Нужна рулетка"; break;
+            case 1: it.prompt = "E — измерить ширину"; break;
+            case 2: it.prompt = "E — измерить высоту"; break;
+            case 3: it.prompt = "Выберите цену на телефоне"; break;
+            case 5:
+                it.prompt = (order == OrderType.FBO)
+                    ? "E — проверить QR (осталось " + workLeft + ")"
+                    : "Стикеры клеим на доску у стены";
+                break;
+            default: it.prompt = ""; break;
+        }
+    }
+
+    void OnInteract()
+    {
+        if (step == 5)
+        {
+            DoWorkOnBox();
+            return;
+        }
+        if (!Inventory.hasTape)
+        {
+            Hud.Say("Сначала возьмите рулетку со стола.");
+            return;
+        }
+        if (step >= 3) return;
+
+        if (step == 0) Hud.Say("Длина: " + lengthCm + " см");
+        else if (step == 1) Hud.Say("Ширина: " + widthCm + " см");
+        else Hud.Say("Высота: " + heightCm + " см");
+
+        step++;
+        UpdatePrompt();
+
+        if (step == 3)
+        {
+            measured = true;
+            Hud.StartPricing(this);
+        }
+    }
+
+    // ---------- Сделка ----------
+    // Вызывается из телефона, когда игрок нажал Enter
+    public void Propose(int price)
+    {
+        float markup = (price - basePrice) / (float)basePrice;
+        float tolerance = Random.Range(0.20f, 0.40f);   // сколько наценки этот селлер готов вытерпеть
+
+        if (markup > tolerance)
+        {
+            // Слишком дорого: селлер уезжает без сделки
+            step = 4;
+            UpdatePrompt();
+            Inventory.sellerAnger++;
+            Hud.Say("Селлер: «Вы с ума сошли? Я поеду в другое место.»", 4f);
+            Hud.ShowPhone("ответ", "Селлер отказался", "Заработано: 0 руб.");
+            Destroy(gameObject, 3f);
+            if (BoxSpawner.Instance != null) BoxSpawner.Instance.SpawnLater(7f);
+            return;
+        }
+
+        if (markup > 0.08f)
+        {
+            Inventory.sellerAnger++;
+            Hud.AddMoney(price);
+            Hud.Say("Селлер молча платит. Он это запомнит.", 4f);
+        }
+        else
+        {
+            Hud.AddMoney(price);
+            Hud.Say("Селлер: «Спасибо, всё честно.»", 4f);
+        }
+
+        Invoke("StartWork", 2.5f);   // сначала даём прочитать реакцию, потом выдаём задание
+        step = 4;
+        UpdatePrompt();
+    }
+
+    // ---------- Задание ----------
+    void StartWork()
+    {
+        step = 5;
+        order = (Random.value < 0.5f) ? OrderType.FBS : OrderType.FBO;
+
+        if (order == OrderType.FBS)
+        {
+            workLeft = Random.Range(3, 6);
+            ActiveFbsBox = this;
+            Hud.ShowPhone("задача", "FBS: клейте стикеры на доску", "Осталось: " + workLeft);
+        }
+        else
+        {
+            workLeft = 2;
+            AddLabel();
+            Hud.ShowPhone("задача", "FBO: проверьте QR на коробке", "Осталось: " + workLeft);
+        }
+        UpdatePrompt();
+    }
+
+    void DoWorkOnBox()
+    {
+        if (order != OrderType.FBO)
+        {
+            Hud.Say("Стикеры нужно клеить на доску у левой стены.");
+            return;
+        }
+
+        workLeft--;
+        if (workLeft > 0)
+        {
+            Hud.Say("Сканирую QR...");
+            Hud.ShowPhone("задача", "FBO: проверьте QR на коробке", "Осталось: " + workLeft);
+            UpdatePrompt();
+        }
+        else
+        {
+            Hud.Say("QR совпал.");
+            FinishWork();
+        }
+    }
+
+    // Вызывается доской, когда на неё наклеен стикер
+    public void OnStickerStuck()
+    {
+        workLeft--;
+        if (workLeft > 0)
+        {
+            Hud.Say("Стикер на доске. Осталось: " + workLeft);
+            Hud.ShowPhone("задача", "FBS: клейте стикеры на доску", "Осталось: " + workLeft);
+        }
+        else
+        {
+            Hud.Say("Все стикеры на месте.");
+            FinishWork();
+        }
+    }
+
+    void FinishWork()
+    {
+        step = 6;
+        UpdatePrompt();
+        ActiveFbsBox = null;
+        Inventory.boxesReady++;
+        Hud.ShowPhone("задача", "Коробка готова", "Готово коробок: " + Inventory.boxesReady);
+        Invoke("Leave", 1.5f);
+    }
+
+    void Leave()
+    {
+        if (StickerBoard.Instance != null) StickerBoard.Instance.Clear();
+        if (BoxSpawner.Instance != null) BoxSpawner.Instance.SpawnLater(4f);
+        Destroy(gameObject);   // позже коробка будет отправляться в зону паллеты
+    }
+
+    // Белая этикетка с QR на верхней грани коробки
+    void AddLabel()
+    {
+        if (labelMaterial == null) return;
+        Vector3 s = transform.localScale;
+        GameObject l = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        Destroy(l.GetComponent<Collider>());
+        l.name = "QRLabel";
+        l.transform.SetParent(transform, false);
+        l.transform.localPosition = new Vector3(0, 0.5f + 0.005f / s.y, 0);
+        l.transform.localScale = new Vector3(0.25f / s.x, 0.01f / s.y, 0.18f / s.z);
+        l.GetComponent<Renderer>().sharedMaterial = labelMaterial;
+    }
+}
