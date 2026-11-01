@@ -37,7 +37,7 @@ public class MeasurableBox : MonoBehaviour
 
         // Цена зависит от объёма: 100 руб. + 3 руб. за литр, округляем до десятков
         float liters = lengthCm * widthCm * heightCm / 1000f;
-        basePrice = Mathf.RoundToInt((100f + liters * 3f) / 10f) * 10;
+        basePrice = Mathf.RoundToInt((100f + liters * 3f) * ActController.PriceFactor / 10f) * 10;
 
         UpdatePrompt();
     }
@@ -103,7 +103,7 @@ public class MeasurableBox : MonoBehaviour
     public void Propose(int price)
     {
         float markup = (price - basePrice) / (float)basePrice;
-        float tolerance = Random.Range(0.20f, 0.40f);   // сколько наценки этот селлер готов вытерпеть
+        float tolerance = Random.Range(0.20f, 0.40f) * ActController.AngerFactor;   // сколько наценки этот селлер готов вытерпеть
 
         if (markup > tolerance)
         {

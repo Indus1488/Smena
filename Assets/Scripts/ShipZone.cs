@@ -50,6 +50,22 @@ public class ShipZone : MonoBehaviour
         return Mathf.Abs(l.x) < 1.4f && Mathf.Abs(l.z) < 1.4f;
     }
 
+    // Газель погрузила все паллеты. Возвращает, сколько их было.
+    public int ClearAll()
+    {
+        int n = 0;
+        for (int i = 0; i < taken.Length; i++)
+        {
+            if (taken[i] != null)
+            {
+                Destroy(taken[i].gameObject);
+                taken[i] = null;
+                n++;
+            }
+        }
+        return n;
+    }
+
     public void Remove(PalletCargo p)
     {
         for (int i = 0; i < taken.Length; i++)

@@ -27,9 +27,9 @@ public class Flashlight : MonoBehaviour
 
         lamp = beam.AddComponent<Light>();
         lamp.type = LightType.Spot;
-        lamp.range = 22f;
-        lamp.spotAngle = 60f;
-        lamp.innerSpotAngle = 25f;
+        lamp.range = 14f;
+        lamp.spotAngle = 28f;          // маленькое пятно: всё остальное — кромешная тьма
+        lamp.innerSpotAngle = 10f;
         lamp.intensity = FullIntensity;
         lamp.color = new Color(1f, 0.95f, 0.8f);
         lamp.shadows = LightShadows.Soft;
@@ -43,6 +43,7 @@ public class Flashlight : MonoBehaviour
         if (!Inventory.hasFlashlight)
         {
             lamp.enabled = false;
+            Inventory.flashlightOn = false;
             return;
         }
 
@@ -74,6 +75,7 @@ public class Flashlight : MonoBehaviour
         }
 
         lamp.enabled = on;
+        Inventory.flashlightOn = on;
         if (on)
         {
             float b = Inventory.flashlightBattery;

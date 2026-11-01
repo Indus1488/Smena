@@ -17,7 +17,10 @@ public static class Inventory
     public static bool hasFlashlight;        // фонарик появляется в акте 2
     public static float flashlightBattery = 100f;   // заряд в процентах
     public static int spareBatteries;        // запасные батареи (аккумуляторы)
+    public static bool flashlightOn;         // фонарик сейчас светит (Володя это «видит»)
+    public static float pulse = 70f;         // пульс игрока
     public static int palletsReady;  // паллет в зоне отгрузки, ждут газель
+    public static int palletStock;   // купленные паллеты, которых ещё нет на месте сборки
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void Reset()
@@ -33,6 +36,9 @@ public static class Inventory
         hasFlashlight = false;
         flashlightBattery = 100f;
         spareBatteries = 0;
+        flashlightOn = false;
+        pulse = 70f;
         palletsReady = 0;
+        palletStock = 0;
     }
 }

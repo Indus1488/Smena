@@ -12,6 +12,7 @@ public class PalletSpot : MonoBehaviour
     public Material filmMaterial;
 
     float nextCheck;
+    bool firstDone;
 
     void Awake()
     {
@@ -23,7 +24,19 @@ public class PalletSpot : MonoBehaviour
         if (Time.time >= nextCheck)
         {
             nextCheck = Time.time + 1f;
-            if (!PalletCargo.AnyNear(transform.position, 0.9f)) Spawn();
+            if (!PalletCargo.AnyNear(transform.position, 0.9f))
+            {
+                if (!firstDone)
+                {
+                    firstDone = true;
+                    Spawn();                       // стартовая паллета (бесплатная)
+                }
+                else if (Inventory.palletStock > 0)
+                {
+                    Inventory.palletStock--;       // следующие паллеты нужно покупать
+                    Spawn();
+                }
+            }
         }
 
         // Вернуть рохлю на место

@@ -28,7 +28,7 @@ public class BoxSpawner : MonoBehaviour
         {
             started = true;
             if (!GameConfig.skipPrologue && Inventory.trashTotal > 0)
-                Hud.ShowPhone("СМС от начальника", "«Меряй коробки, клей", "стикеры, вызывай газель»", 8f);
+                PhoneUI.AddMessage("Начальник", "Селлеры уже подъезжают. Начинай.");
             Invoke("SpawnBox", firstDelay);
         }
 

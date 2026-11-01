@@ -12,6 +12,7 @@ public static class GameplayFixer
         Ensure<WorkJack>("WorkJack");
         Ensure<ShipZone>("ShipZone");
         Ensure<KeyItem>("HiddenKey");
+        Ensure<CentralGate>("CentralGate");
 
         PalletSpot spot = Ensure<PalletSpot>("PalletSpot");
         if (spot != null)
@@ -19,6 +20,18 @@ public static class GameplayFixer
             if (spot.palletMaterial == null) spot.palletMaterial = MaterialOf("AlleyPallet");
             if (spot.boxMaterial == null) spot.boxMaterial = MaterialOf("LoneBox");
             if (spot.filmMaterial == null) spot.filmMaterial = MaterialOf("Wrap");
+        }
+
+        // Аккумуляторы в самом левом складе
+        Transform[] pieces = Object.FindObjectsByType<Transform>(FindObjectsSortMode.None);
+        for (int i = 0; i < pieces.Length; i++)
+        {
+            if (pieces[i].name != "Battery") continue;
+            if (pieces[i].GetComponent<BatteryPickup>() == null)
+            {
+                pieces[i].gameObject.AddComponent<BatteryPickup>();
+                Debug.Log("Подключён скрипт BatteryPickup к аккумулятору");
+            }
         }
 
         // Весь мусор у входа

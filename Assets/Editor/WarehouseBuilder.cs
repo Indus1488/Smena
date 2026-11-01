@@ -32,7 +32,7 @@ public static class WarehouseBuilder
     static Material concrete, concreteDark, plinthMat, osb, doorOpen, doorClosed, turquoise, rust, wood,
         palletWood, card, cardDark, tape, film, foil, foilDark, jackBlue, jackYellow, black, banner,
         bannerStripe, dirt, asphalt, tile, redDoor, grayDoor, glass, bag, lampMat, gate,
-        stripeCream, stripeDark, silver, gantryMat, factoryBlue, chimneyRed, chimneyWhite, boardBrown;
+        stripeCream, stripeDark, silver, gantryMat, factoryBlue, chimneyRed, chimneyWhite, boardBrown, monsterMat, eyeMat;
 
     // =====================================================================
     // МЕНЮ
@@ -112,8 +112,11 @@ public static class WarehouseBuilder
 
         // Два одинаковых склада слева, без интерьера: в первом будет монстр, во втором аккумуляторы
         // Самый левый (аккумуляторы) заперт: нужен ключ, спрятанный на стуле на улице.
-        BuildClone(root, "WarehouseMonster", -CloneStep, player, false);
-        BuildClone(root, "WarehouseBatteries", -2f * CloneStep, player, true);
+        BuildClone(root, "WarehouseMonster", -CloneStep, player, false, false);
+        BuildClone(root, "WarehouseBatteries", -2f * CloneStep, player, true, true);
+        BuildMonster(root);
+        BuildGazelle(root);
+        BuildBusStop(root);
 
         // Основной склад
         BuildEntrance(root, player, 3.0f, false);
@@ -135,13 +138,81 @@ public static class WarehouseBuilder
     }
 
     // Склад-двойник без интерьера: оболочка, двери, ступени, детали на крыше и свет
-    static void BuildClone(Transform root, string name, float x, GameObject player, bool needsKey)
+    static void BuildClone(Transform root, string name, float x, GameObject player, bool needsKey, bool hasBatteries)
     {
         Transform w = Group(name, root, new Vector3(x, 0, 0));
         BuildShell(w);
         BuildRoofDetails(w);
         BuildLights(w);
         BuildEntrance(w, player, 2.0f, needsKey);
+        if (hasBatteries) BuildBatteries(w);
+    }
+
+    // Аккумуляторы, разбросанные по самому левому складу (искать с фонариком)
+    static void BuildBatteries(Transform w)
+    {
+        Transform g = Group("Batteries", w, Vector3.zero);
+        float[,] spots = {
+            { -2.2f, 3.2f, 20f },
+            {  1.8f, 8.4f, 10f },
+        };
+        for (int i = 0; i < spots.GetLength(0); i++)
+        {
+            Transform b = Group("Battery", g, new Vector3(spots[i, 0], FloorY, spots[i, 1]), spots[i, 2]);
+            NoCol(Cube("Body", b, new Vector3(0, 0.11f, 0), new Vector3(0.30f, 0.22f, 0.18f), foilDark));
+            NoCol(Cube("Label", b, new Vector3(0, 0.11f, 0.092f), new Vector3(0.22f, 0.10f, 0.004f), tape));
+            NoCol(Cube("TerminalL", b, new Vector3(-0.09f, 0.24f, 0), new Vector3(0.04f, 0.03f, 0.04f), foil));
+            NoCol(Cube("TerminalR", b, new Vector3(0.09f, 0.24f, 0), new Vector3(0.04f, 0.03f, 0.04f), foil));
+
+            // Увеличенный коллайдер, чтобы в аккумулятор было легко попасть лучом фонарика и взглядом
+            BoxCollider bc = b.gameObject.AddComponent<BoxCollider>();
+            bc.center = new Vector3(0, 0.12f, 0);
+            bc.size = new Vector3(0.5f, 0.4f, 0.4f);
+            Interactable bi = b.gameObject.AddComponent<Interactable>();
+            bi.prompt = "E — взять аккумулятор";
+            TryAdd(b.gameObject, "BatteryPickup");
+        }
+    }
+
+    // Володя: тонкий и слишком высокий силуэт со светящимися глазами. Выключен, пока его не позовёт ActController.
+    static void BuildMonster(Transform root)
+    {
+        Transform m = Group("Volodya", root, new Vector3(-CloneStep, FloorY, 6f));
+        NoCol(Cube("Torso", m, new Vector3(0, 1.15f, 0), new Vector3(0.45f, 1.0f, 0.28f), monsterMat));
+        NoCol(Cube("Head", m, new Vector3(0, 1.9f, 0.06f), new Vector3(0.34f, 0.42f, 0.4f), monsterMat));
+        NoCol(Cube("EyeL", m, new Vector3(-0.08f, 1.95f, 0.27f), new Vector3(0.07f, 0.05f, 0.03f), eyeMat));
+        NoCol(Cube("EyeR", m, new Vector3(0.08f, 1.95f, 0.27f), new Vector3(0.07f, 0.05f, 0.03f), eyeMat));
+        NoCol(CubeR("ArmL", m, new Vector3(-0.42f, 1.0f, 0.1f), new Vector3(0.08f, 1.5f, 0.08f), monsterMat, new Vector3(0, 0, 10)));
+        NoCol(CubeR("ArmR", m, new Vector3(0.42f, 1.0f, 0.1f), new Vector3(0.08f, 1.5f, 0.08f), monsterMat, new Vector3(0, 0, -10)));
+        NoCol(Cube("LegL", m, new Vector3(-0.12f, 0.45f, 0), new Vector3(0.12f, 0.9f, 0.12f), monsterMat));
+        NoCol(Cube("LegR", m, new Vector3(0.12f, 0.45f, 0), new Vector3(0.12f, 0.9f, 0.12f), monsterMat));
+        TryAdd(m.gameObject, "MonsterController");
+        m.gameObject.SetActive(false);
+    }
+
+    // Газель: белый грузовик с синей кабиной. Выключена, пока её не вызовут по телефону.
+    static void BuildGazelle(Transform root)
+    {
+        Transform gz = Group("Gazelle", root, new Vector3(-42f, 0f, -6.5f));
+        NoCol(Cube("Chassis", gz, new Vector3(0, 0.55f, 0), new Vector3(2.0f, 0.3f, 6.2f), black));
+        NoCol(Cube("Cargo", gz, new Vector3(0, 1.85f, -0.9f), new Vector3(2.1f, 2.1f, 4.2f), film));
+        NoCol(Cube("Cab", gz, new Vector3(0, 1.45f, 2.3f), new Vector3(2.0f, 1.5f, 1.7f), jackBlue));
+        NoCol(Cube("Windshield", gz, new Vector3(0, 1.75f, 3.17f), new Vector3(1.7f, 0.7f, 0.05f), glass));
+        for (int a = 0; a < 2; a++)
+            for (int b = 0; b < 2; b++)
+                NoCol(Cyl("Wheel", gz, new Vector3(a == 0 ? -1.0f : 1.0f, 0.4f, b == 0 ? -1.8f : 1.8f),
+                    new Vector3(0.8f, 0.15f, 0.8f), new Vector3(0, 0, 90), black));
+        TryAdd(gz.gameObject, "GazelleController");
+        gz.gameObject.SetActive(false);
+    }
+
+    // Остановка возле завода, где была лампа. Подойдёте в финале, и случится скример.
+    static void BuildBusStop(Transform root)
+    {
+        Transform b = Group("BusStop", root, new Vector3(16.5f, 0f, 9f));
+        NoCol(Cyl("Post", b, new Vector3(0, 1.5f, 0), new Vector3(0.06f, 1.5f, 0.06f), Vector3.zero, foilDark));
+        NoCol(Cube("Sign", b, new Vector3(0, 3.1f, 0), new Vector3(0.7f, 0.6f, 0.05f), jackBlue));
+        Cube("Bench", b, new Vector3(1.2f, 0.45f, 0), new Vector3(1.6f, 0.08f, 0.45f), wood);
     }
 
     // Вход в склад: снаружи ворота закрыты, изнутри открыты. Плюс метки появления и двери-триггеры.
@@ -195,6 +266,8 @@ public static class WarehouseBuilder
             m = new Material(sh);
             AssetDatabase.CreateAsset(m, path);
         }
+        smooth = Mathf.Min(smooth, 0.05f);   // матовый ретро-вид (PS1)
+        metal = 0f;
         m.color = c;
         if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smooth);
         if (m.HasProperty("_Glossiness")) m.SetFloat("_Glossiness", smooth);
@@ -243,6 +316,11 @@ public static class WarehouseBuilder
         chimneyRed = Mat("ChimneyRed", new Color(0.75f, 0.15f, 0.12f), 0.2f);
         chimneyWhite = Mat("ChimneyWhite", new Color(0.92f, 0.92f, 0.92f), 0.2f);
         boardBrown = Mat("BoardBrown", new Color(0.25f, 0.17f, 0.12f), 0.15f);
+        monsterMat = Mat("Monster", new Color(0.02f, 0.02f, 0.025f), 0.35f);
+        eyeMat = Mat("Eye", Color.white, 0.5f);
+        eyeMat.EnableKeyword("_EMISSION");
+        eyeMat.SetColor("_EmissionColor", new Color(3f, 3f, 3f));
+        EditorUtility.SetDirty(eyeMat);
     }
 
     // =====================================================================
@@ -529,8 +607,36 @@ public static class WarehouseBuilder
         for (int i = 0; i < wx.Length; i++)
             Cube("Window", n, new Vector3(wx[i], 3.9f, backFace - 0.03f), new Vector3(1.6f, 1.0f, 0.06f), glass);
 
-        // Ржавая эстакада справа
-        Transform g = Group("Gantry", n, new Vector3(OW + 8.7f, 0, 3f));
+        // Завод: длинной стороной вдоль Z, перпендикулярно плиточному зданию. Центр по Z = 35.
+        float factoryZ = 35f, factoryLen = 42f;
+        float fz0 = factoryZ - factoryLen / 2f;      // южный торец, виден со двора
+        Cube("Factory", n, new Vector3(26.5f, 5f, factoryZ), new Vector3(12, 10, factoryLen), factoryBlue);
+
+        // Окна на западной стене (двигаются вместе с заводом)
+        for (int row = 0; row < 2; row++)
+            for (int i = 0; i < 9; i++)
+                NoCol(Cube("FactoryWindow", n, new Vector3(20.47f, row == 0 ? 3f : 7f, fz0 + 4f + i * 4f), new Vector3(0.06f, 1.2f, 3f), glass));
+
+        // Окна на южном торце
+        float[] sx = { 22.5f, 24.5f, 29.5f, 31.5f };
+        for (int row = 0; row < 2; row++)
+            for (int j = 0; j < sx.Length; j++)
+                NoCol(Cube("FactoryWindow", n, new Vector3(sx[j], row == 0 ? 2.5f : 8.5f, fz0 - 0.03f), new Vector3(1.6f, 1.2f, 0.06f), glass));
+
+        // Лампа на заводе, на южном торце, лицом ко двору (включится в акте 2 и разобьётся)
+        Transform lamp = Group("FactoryLamp", n, new Vector3(27f, 6f, fz0 - 0.15f), 180f);
+        NoCol(Cyl("Housing", lamp, Vector3.zero, new Vector3(0.45f, 0.12f, 0.45f), new Vector3(90, 0, 0), lampMat));
+        GameObject lg = new GameObject("Light");
+        lg.transform.SetParent(lamp, false);
+        Light l = lg.AddComponent<Light>();
+        l.type = LightType.Point;
+        l.range = 14f;
+        l.intensity = 3f;
+        l.color = new Color(1f, 0.9f, 0.7f);
+        l.enabled = false; // выключена, пока не наступит 18:00
+
+        // Ржавая эстакада стоит у здания завода, перед южным торцом
+        Transform g = Group("Gantry", n, new Vector3(24.5f, 0, fz0 - 3.8f));
         float[] px = { -4f, 4f };
         float[] pz = { -3f, 3f };
         for (int i = 0; i < 2; i++)
@@ -541,34 +647,45 @@ public static class WarehouseBuilder
         NoCol(Cube("RailFront", g, new Vector3(0, 4.2f, -3.05f), new Vector3(8.2f, 0.06f, 0.06f), gantryMat));
         NoCol(Cube("RailBack", g, new Vector3(0, 4.2f, 3.05f), new Vector3(8.2f, 0.06f, 0.06f), gantryMat));
 
-        // Завод возле эстакады. Длинной стороной вдоль оси Z, то есть перпендикулярно плиточному зданию.
-        Cube("Factory", n, new Vector3(26.5f, 5f, 9f), new Vector3(12, 10, 42), factoryBlue);
-        for (int row = 0; row < 2; row++)
-            for (int i = 0; i < 9; i++)
-                NoCol(Cube("FactoryWindow", n, new Vector3(20.47f, row == 0 ? 3f : 7f, -8f + i * 4f), new Vector3(0.06f, 1.2f, 3f), glass));
-        Transform lamp = Group("FactoryLamp", n, new Vector3(20.3f, 5f, 2f));
-        NoCol(Cyl("Housing", lamp, Vector3.zero, new Vector3(0.45f, 0.12f, 0.45f), new Vector3(0, 0, 90), lampMat));
-        GameObject lg = new GameObject("Light");
-        lg.transform.SetParent(lamp, false);
-        Light l = lg.AddComponent<Light>();
-        l.type = LightType.Point;
-        l.range = 14f;
-        l.intensity = 3f;
-        l.color = new Color(1f, 0.9f, 0.7f);
-        l.enabled = false; // выключена, пока не наступит 18:00
-
-        // Большой полосатый корпус — «центральный склад». Стоит напротив игровой зоны, через дорогу. Ворота закрыты.
+        // Центральный склад. Он ПОЛЫЙ: в 18:00 ворота поднимаются, и внутри видны тёмная глубина и надпись.
         Transform c = Group("CentralWarehouse", n, Vector3.zero);
-        float faceZ = -30f;
-        Cube("Body", c, new Vector3(0, 11f, faceZ - 20f), new Vector3(70, 22, 40), stripeCream);
+        float faceZ = -30f, cw = 35f, ch = 22f, cdepth = 40f, gw = 6f, gh = 5f;
+        float sideW = cw - gw / 2f;   // ширина левой и правой частей фасада
+
+        Cube("FrontLeft", c, new Vector3(-(cw + gw / 2f) / 2f, ch / 2f, faceZ - 0.3f), new Vector3(sideW, ch, 0.6f), stripeCream);
+        Cube("FrontRight", c, new Vector3((cw + gw / 2f) / 2f, ch / 2f, faceZ - 0.3f), new Vector3(sideW, ch, 0.6f), stripeCream);
+        Cube("FrontTop", c, new Vector3(0, gh + (ch - gh) / 2f, faceZ - 0.3f), new Vector3(gw, ch - gh, 0.6f), stripeCream);
+        Cube("Floor", c, new Vector3(0, 0.05f, faceZ - cdepth / 2f), new Vector3(2 * cw, 0.1f, cdepth), concreteDark);
+        Cube("Ceiling", c, new Vector3(0, ch, faceZ - cdepth / 2f), new Vector3(2 * cw, 0.5f, cdepth), concreteDark);
+        Cube("WallLeft", c, new Vector3(-cw, ch / 2f, faceZ - cdepth / 2f), new Vector3(0.6f, ch, cdepth), stripeCream);
+        Cube("WallRight", c, new Vector3(cw, ch / 2f, faceZ - cdepth / 2f), new Vector3(0.6f, ch, cdepth), stripeCream);
+        Cube("WallBack", c, new Vector3(0, ch / 2f, faceZ - cdepth), new Vector3(2 * cw, ch, 0.6f), stripeCream);
+
+        // Тёмные полосы и окна на фасаде
         float[] bandY = { 4f, 8.5f, 13f, 17.5f };
         for (int i = 0; i < bandY.Length; i++)
         {
-            NoCol(Cube("DarkBand", c, new Vector3(0, bandY[i], faceZ + 0.03f), new Vector3(70, 2.2f, 0.06f), stripeDark));
-            if (i > 0)
+            if (i == 0)
+            {
+                NoCol(Cube("DarkBand", c, new Vector3(-19f, bandY[i], faceZ + 0.03f), new Vector3(sideW, 2.2f, 0.06f), stripeDark));
+                NoCol(Cube("DarkBand", c, new Vector3(19f, bandY[i], faceZ + 0.03f), new Vector3(sideW, 2.2f, 0.06f), stripeDark));
+            }
+            else
+            {
+                NoCol(Cube("DarkBand", c, new Vector3(0, bandY[i], faceZ + 0.03f), new Vector3(2 * cw, 2.2f, 0.06f), stripeDark));
                 NoCol(Cube("Windows", c, new Vector3(0, bandY[i] + 2.1f, faceZ + 0.03f), new Vector3(50, 0.9f, 0.06f), glass));
+            }
         }
-        Cube("CentralGate", c, new Vector3(0, 2.5f, faceZ + 0.1f), new Vector3(6f, 5f, 0.2f), gate);
+
+        // Ворота: закрыты, поднимаются в 18:00
+        GameObject gateGO = Cube("CentralGate", c, new Vector3(0, gh / 2f, faceZ - 0.3f), new Vector3(gw - 0.02f, gh, 0.5f), gate);
+        TryAdd(gateGO, "CentralGate");
+
+        // Перегородка за воротами с надписью «Оно любит свет» (текст показывается субтитрами)
+        Cube("Partition", c, new Vector3(0, 3f, faceZ - 8f), new Vector3(16f, 6f, 0.4f), concreteDark);
+        NoCol(Cube("Inscription", c, new Vector3(0, 3.2f, faceZ - 7.78f), new Vector3(6f, 1.2f, 0.04f), tape));
+
+        // Красно-белая труба на крыше
         for (int i = 0; i < 6; i++)
             Cyl("Chimney", c, new Vector3(-20f, 23f + i * 2f, faceZ - 15f), new Vector3(1.2f, 1f, 1.2f), Vector3.zero,
                 (i % 2 == 0) ? chimneyRed : chimneyWhite);
@@ -615,7 +732,6 @@ public static class WarehouseBuilder
             NoCol(Cube("Plank", a, new Vector3(x, 0.03f, z), new Vector3(0.6f, 0.04f, 0.09f), palletWood, (float)rnd.NextDouble() * 180f));
         }
 
-        Van(y, new Vector3(OW + 7.2f, 0f, -5f), 90f);
     }
 
     // =====================================================================
