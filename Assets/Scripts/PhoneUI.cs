@@ -21,6 +21,13 @@ public class PhoneUI : MonoBehaviour
     static List<Msg> messages = new List<Msg>();
 
     bool open;
+    int closedFrame = -1;
+
+    // Телефон открыт (или закрылся в этом кадре — чтобы тот же Esc не открыл паузу)
+    public static bool IsOpen
+    {
+        get { return Instance != null && (Instance.open || Instance.closedFrame == Time.frameCount); }
+    }
     int screen;          // 0 главный экран, 1 сообщения, 2 магазин, 3 газель
     int openedMsg = -1;
     Vector2 scroll;
@@ -45,6 +52,7 @@ public class PhoneUI : MonoBehaviour
         m.time = Hud.TimeText();
         messages.Insert(0, m);
         unread++;
+        Sfx.Play("phone_msg", 0.8f);
     }
 
     void Start()
@@ -62,6 +70,7 @@ public class PhoneUI : MonoBehaviour
             if (open) Close();
             return;
         }
+        if (GameMenus.IsBlocking) return;
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             if (open) Close(); else Open();
@@ -90,7 +99,8 @@ public class PhoneUI : MonoBehaviour
     void Close()
     {
         open = false;
-        if (pc != null) pc.enabled = true;
+        closedFrame = Time.frameCount;
+        if (pc != null && !PalletCargo.IsLifting()) pc.enabled = true;   // пока качают рохлю, камера стоит
         if (interactor != null) interactor.enabled = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -102,7 +112,8 @@ public class PhoneUI : MonoBehaviour
         if (Hud.money < GameConfig.pricePallet) return;
         Hud.AddMoney(-GameConfig.pricePallet);
         Inventory.palletStock++;
-        Hud.Say("Куплена паллета (-" + GameConfig.pricePallet + " руб.)", 3f);
+        Sfx.Play("money", 0.7f);
+        Hud.Say("Куплена паллета (-" + GameConfig.pricePallet + " руб.). Она во дворе.", 3f);
     }
 
     void BuyBattery()
@@ -110,6 +121,7 @@ public class PhoneUI : MonoBehaviour
         if (Hud.money < GameConfig.priceBattery) return;
         Hud.AddMoney(-GameConfig.priceBattery);
         Inventory.spareBatteries++;
+        Sfx.Play("money", 0.7f);
         Hud.Say("Куплена батарея (-" + GameConfig.priceBattery + " руб.)", 3f);
     }
 
@@ -243,7 +255,7 @@ public class PhoneUI : MonoBehaviour
         if (GUI.Button(new Rect(x, y + 88f, w, 72f), "Магазин", buttonS)) screen = 2;
         if (GUI.Button(new Rect(x, y + 176f, w, 72f), "Газель", buttonS)) screen = 3;
 
-        GUI.Label(new Rect(x, y + 270f, w, 30f), "Запас: паллет " + Inventory.palletStock + ", батарей " + Inventory.spareBatteries, smallS);
+        GUI.Label(new Rect(x, y + 270f, w, 30f), "Запас батарей: " + Inventory.spareBatteries, smallS);
         GUI.Label(new Rect(x, y + 296f, w, 30f), "Паллет в жёлтой зоне: " + Inventory.palletsReady, smallS);
     }
 
@@ -297,7 +309,7 @@ public class PhoneUI : MonoBehaviour
     {
         GUI.Label(new Rect(x, y, w, 34f), "Магазин", titleS);
 
-        GUI.Label(new Rect(x, y + 50f, w, 30f), "Паллета (в запасе: " + Inventory.palletStock + ")", normalS);
+        GUI.Label(new Rect(x, y + 50f, w, 30f), "Паллета", normalS);
         GUI.Label(new Rect(x, y + 80f, w, 26f), GameConfig.pricePallet + " руб.", smallS);
         GUI.enabled = Hud.money >= GameConfig.pricePallet;
         if (GUI.Button(new Rect(x, y + 110f, w, 52f), "Купить паллету", buttonS)) BuyPallet();

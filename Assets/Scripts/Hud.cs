@@ -7,6 +7,7 @@ public class Hud : MonoBehaviour
     public static Hud Instance;
     public static int money;
     public static bool hidden;      // финал прячет интерфейс
+    public static int totalEarned;  // всего заработано за смену (для итогов)
     public static float minutes = 16f * 60f;       // игровое время в минутах от полуночи (16:00)
     public static float minutesPerSecond = 0.5f;   // сколько игровых минут проходит за реальную секунду
 
@@ -29,6 +30,7 @@ public class Hud : MonoBehaviour
     {
         money = 0;
         hidden = false;
+        totalEarned = 0;
         minutes = 16f * 60f;
         GameObject go = new GameObject("HUD");
         Instance = go.AddComponent<Hud>();
@@ -106,6 +108,8 @@ public class Hud : MonoBehaviour
     public static void AddMoney(int amount)
     {
         money += amount;
+        if (amount > 0) totalEarned += amount;
+        if (amount > 0) Sfx.Play("money", 0.7f);
     }
 
     // ---- Рисование ----
@@ -161,10 +165,9 @@ public class Hud : MonoBehaviour
         Shadowed(new Rect(20, 58, 300, 32), money + " руб.", normal);
         Shadowed(new Rect(20, 92, 400, 24), "Недовольных селлеров: " + Inventory.sellerAnger, small);
         Shadowed(new Rect(20, 116, 400, 24), "Готово коробок: " + Inventory.boxesReady, small);
-        Shadowed(new Rect(20, 140, 400, 24), "Паллет к отправке: " + Inventory.palletsReady + "   (в запасе: " + Inventory.palletStock + ")", small);
+        Shadowed(new Rect(20, 140, 400, 24), "Паллет к отправке: " + Inventory.palletsReady, small);
         if (ActController.Act >= 3)
             Shadowed(new Rect(20, 212, 500, 24), "Пульс: " + Mathf.RoundToInt(Inventory.pulse) + "   (V — дыхание)", small);
-        if (Inventory.hasKey) Shadowed(new Rect(20, 164, 400, 24), "Ключ от склада: есть", small);
         if (Inventory.hasFlashlight)
             Shadowed(new Rect(20, 188, 500, 24),
                 "Фонарик: " + Mathf.CeilToInt(Inventory.flashlightBattery) + "%   запас: " + Inventory.spareBatteries + "   (Q — вкл/выкл, T — сменить батарею)", small);

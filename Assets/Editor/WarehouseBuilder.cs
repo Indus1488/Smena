@@ -1,4 +1,4 @@
-// «СМЕНА» — построитель склада и двора по фотографиям (версия 4).
+// «СМЕНА» — построитель склада и двора по фотографиям (версия 5).
 // Положите файл в Assets/Editor/WarehouseBuilder.cs (заменив старый).
 // Меню Unity: Smena → ...
 using UnityEngine;
@@ -32,7 +32,7 @@ public static class WarehouseBuilder
     static Material concrete, concreteDark, plinthMat, osb, doorOpen, doorClosed, turquoise, rust, wood,
         palletWood, card, cardDark, tape, film, foil, foilDark, jackBlue, jackYellow, black, banner,
         bannerStripe, dirt, asphalt, tile, redDoor, grayDoor, glass, bag, lampMat, gate,
-        stripeCream, stripeDark, silver, gantryMat, factoryBlue, chimneyRed, chimneyWhite, boardBrown, monsterMat, eyeMat;
+        stripeCream, stripeDark, silver, gantryMat, factoryBlue, chimneyRed, chimneyWhite, boardBrown, monsterMat, eyeMat, binGreen;
 
     // =====================================================================
     // МЕНЮ
@@ -69,6 +69,11 @@ public static class WarehouseBuilder
     // =====================================================================
     static void BuildInternal(bool keepMine)
     {
+        if (EditorApplication.isPlaying)
+        {
+            EditorUtility.DisplayDialog("Смена", "Сначала остановите игру (кнопка Play), потом стройте склад.", "Понятно");
+            return;
+        }
         GameObject player = GameObject.Find("Player");
         Transform keptInterior = null, keptYard = null;
 
@@ -132,6 +137,7 @@ public static class WarehouseBuilder
         }
 
         AssetDatabase.SaveAssets();
+        TextureApplier.Apply();   // сразу накладываем текстуры (если они лежат в Assets/Textures/Smena)
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         Selection.activeGameObject = rootGO;
         Debug.Log(keepMine ? "Склад обновлён, ваша расстановка сохранена." : "Склад построен с нуля.");
@@ -143,7 +149,7 @@ public static class WarehouseBuilder
         Transform w = Group(name, root, new Vector3(x, 0, 0));
         BuildShell(w);
         BuildRoofDetails(w);
-        BuildLights(w);
+        // свет есть только в главном складе
         BuildEntrance(w, player, 2.0f, needsKey);
         if (hasBatteries) BuildBatteries(w);
     }
@@ -315,6 +321,7 @@ public static class WarehouseBuilder
         factoryBlue = Mat("FactoryBlue", new Color(0.62f, 0.66f, 0.72f), 0.1f);
         chimneyRed = Mat("ChimneyRed", new Color(0.75f, 0.15f, 0.12f), 0.2f);
         chimneyWhite = Mat("ChimneyWhite", new Color(0.92f, 0.92f, 0.92f), 0.2f);
+        binGreen = Mat("BinGreen", new Color(0.12f, 0.26f, 0.16f), 0.3f, 0.2f);
         boardBrown = Mat("BoardBrown", new Color(0.25f, 0.17f, 0.12f), 0.15f);
         monsterMat = Mat("Monster", new Color(0.02f, 0.02f, 0.025f), 0.35f);
         eyeMat = Mat("Eye", Color.white, 0.5f);
@@ -466,18 +473,6 @@ public static class WarehouseBuilder
         NoCol(Cube("EyeTop", parent, pos + new Vector3(0, 0.25f, 0), new Vector3(0.28f, 0.04f, 0.04f), black));
     }
 
-    static void Van(Transform parent, Vector3 pos, float rotY)
-    {
-        Transform v = Group("ParkedVan", parent, pos, rotY);
-        Cube("Body", v, new Vector3(0, 0.85f, 0), new Vector3(1.75f, 0.95f, 4.0f), silver);
-        Cube("Cabin", v, new Vector3(0, 1.55f, 0.35f), new Vector3(1.7f, 0.65f, 2.6f), silver);
-        NoCol(Cube("Glass", v, new Vector3(0, 1.58f, 0.35f), new Vector3(1.72f, 0.4f, 2.62f), glass));
-        for (int a = 0; a < 2; a++)
-            for (int b = 0; b < 2; b++)
-                Cyl("Wheel", v, new Vector3(a == 0 ? -0.9f : 0.9f, 0.32f, b == 0 ? -1.3f : 1.3f),
-                    new Vector3(0.64f, 0.12f, 0.64f), new Vector3(0, 0, 90), black);
-    }
-
     // =====================================================================
     // ЗЕМЛЯ, АСФАЛЬТ, ДОРОГА, НЕВИДИМЫЕ ГРАНИЦЫ
     static void BuildGround(Transform root)
@@ -507,8 +502,10 @@ public static class WarehouseBuilder
 
         Transform b = Group("Borders", root, Vector3.zero);
         Invisible("Border_W", b, new Vector3(-36.5f, 5, -10), new Vector3(1, 10, 100));
-        Invisible("Border_E", b, new Vector3(19.5f, 5, -10), new Vector3(1, 10, 100));
-        Invisible("Border_S", b, new Vector3(-8f, 5, -18.5f), new Vector3(90, 10, 1));
+        // Восточная граница за эстакадой (там мусорка), северный край — от завода до неё
+        Invisible("Border_E", b, new Vector3(44.5f, 5, -10), new Vector3(1, 10, 100));
+        Invisible("Border_NE", b, new Vector3(38.5f, 5, 40f), new Vector3(13, 10, 1));
+        Invisible("Border_S", b, new Vector3(-4f, 5, -18.5f), new Vector3(98, 10, 1));
     }
 
     // =====================================================================
@@ -538,7 +535,8 @@ public static class WarehouseBuilder
         float lintelH = TopY - (FloorY + DoorH);
         Cube("Lintel", s, new Vector3(0, FloorY + DoorH + lintelH / 2f, -WallT / 2f), new Vector3(2 * OW, lintelH, WallT), concrete);
 
-        Cube("Roof", s, new Vector3(0, CeilY + WallT / 2f + 0.01f, InnerD / 2f), new Vector3(2 * OW, WallT, InnerD + 2 * WallT), concreteDark);
+        // Крыша лежит МЕЖДУ стенами: если она накрывает стены сверху, их грани совпадают и мерцают
+        Cube("Roof", s, new Vector3(0, CeilY + WallT / 2f, InnerD / 2f), new Vector3(InnerW, WallT, InnerD), concreteDark);
     }
 
     // =====================================================================
@@ -624,7 +622,7 @@ public static class WarehouseBuilder
                 NoCol(Cube("FactoryWindow", n, new Vector3(sx[j], row == 0 ? 2.5f : 8.5f, fz0 - 0.03f), new Vector3(1.6f, 1.2f, 0.06f), glass));
 
         // Лампа на заводе, на южном торце, лицом ко двору (включится в акте 2 и разобьётся)
-        Transform lamp = Group("FactoryLamp", n, new Vector3(27f, 6f, fz0 - 0.15f), 180f);
+        Transform lamp = Group("FactoryLamp", n, new Vector3(22f, 3f, 43.5f), 180f);
         NoCol(Cyl("Housing", lamp, Vector3.zero, new Vector3(0.45f, 0.12f, 0.45f), new Vector3(90, 0, 0), lampMat));
         GameObject lg = new GameObject("Light");
         lg.transform.SetParent(lamp, false);
@@ -636,7 +634,7 @@ public static class WarehouseBuilder
         l.enabled = false; // выключена, пока не наступит 18:00
 
         // Ржавая эстакада стоит у здания завода, перед южным торцом
-        Transform g = Group("Gantry", n, new Vector3(24.5f, 0, fz0 - 3.8f));
+        Transform g = Group("Gantry", n, new Vector3(37f, 0, 20f));
         float[] px = { -4f, 4f };
         float[] pz = { -3f, 3f };
         for (int i = 0; i < 2; i++)
@@ -646,6 +644,9 @@ public static class WarehouseBuilder
         Cube("Roof", g, new Vector3(0, 5.25f, 0), new Vector3(8.6f, 0.12f, 6.6f), gantryMat);
         NoCol(Cube("RailFront", g, new Vector3(0, 4.2f, -3.05f), new Vector3(8.2f, 0.06f, 0.06f), gantryMat));
         NoCol(Cube("RailBack", g, new Vector3(0, 4.2f, 3.05f), new Vector3(8.2f, 0.06f, 0.06f), gantryMat));
+
+        // Мусорка под эстакадой: сюда выкидывается мусорный мешок
+        Extras.TrashBin(g, Vector3.zero, 0f, binGreen);
 
         // Центральный склад. Он ПОЛЫЙ: в 18:00 ворота поднимаются, и внутри видны тёмная глубина и надпись.
         Transform c = Group("CentralWarehouse", n, Vector3.zero);
@@ -685,6 +686,9 @@ public static class WarehouseBuilder
         Cube("Partition", c, new Vector3(0, 3f, faceZ - 8f), new Vector3(16f, 6f, 0.4f), concreteDark);
         NoCol(Cube("Inscription", c, new Vector3(0, 3.2f, faceZ - 7.78f), new Vector3(6f, 1.2f, 0.04f), tape));
 
+        // 4 лампы на фасаде: стоят с начала, загораются в 17:30, в 18:00 их разбивает Володя
+        Extras.FacadeLamps(c, lampMat, gantryMat);
+
         // Красно-белая труба на крыше
         for (int i = 0; i < 6; i++)
             Cyl("Chimney", c, new Vector3(-20f, 23f + i * 2f, faceZ - 15f), new Vector3(1.2f, 1f, 1.2f), Vector3.zero,
@@ -703,8 +707,7 @@ public static class WarehouseBuilder
         Cube("Banner", y, new Vector3(OW + 0.02f, 2.9f, 1.8f), new Vector3(0.04f, 0.9f, 2.6f), banner);
         NoCol(Cube("BannerStripe", y, new Vector3(OW + 0.04f, 2.9f, 1.8f), new Vector3(0.02f, 0.14f, 2.2f), bannerStripe));
 
-        // Стул и щебень у входа
-        Chair(y, new Vector3(-(OW - 0.7f), 0f, -1.6f), 160f);
+        // Щебень у входа
         System.Random rnd = new System.Random(3);
         for (int i = 0; i < 9; i++)
         {
@@ -876,8 +879,8 @@ public static class WarehouseBuilder
             TryAdd(t, "TrashPiece");
         }
 
-        // Спрятанный ключ на стуле у входа (нужен для самого левого склада)
-        Transform key = Group("HiddenKey", g, new Vector3(-(OW - 0.7f) + 0.08f, 0.49f, -1.6f + 0.05f));
+        // Спрятанный ключ на стуле в проходе слева от склада (нужен для самого левого склада)
+        Transform key = Group("HiddenKey", g, new Vector3(-OW - 1.1f, 0.49f, InnerD * 0.45f));
         NoCol(Cube("Shaft", key, Vector3.zero, new Vector3(0.12f, 0.015f, 0.025f), foil));
         NoCol(Cube("Ring", key, new Vector3(-0.07f, 0, 0), new Vector3(0.045f, 0.015f, 0.045f), foil));
         BoxCollider kc = key.gameObject.AddComponent<BoxCollider>();

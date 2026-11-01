@@ -20,7 +20,8 @@ public static class Inventory
     public static bool flashlightOn;         // фонарик сейчас светит (Володя это «видит»)
     public static float pulse = 70f;         // пульс игрока
     public static int palletsReady;  // паллет в зоне отгрузки, ждут газель
-    public static int palletStock;   // купленные паллеты, которых ещё нет на месте сборки
+    public static int palletStock;   // купленные паллеты, которых ещё нет на месте сборки (лежат стопкой во дворе)
+    public static int trashBag;      // сколько мусора в мешке
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void Reset()
@@ -40,5 +41,6 @@ public static class Inventory
         pulse = 70f;
         palletsReady = 0;
         palletStock = 0;
+        trashBag = 0;
     }
 }

@@ -5,8 +5,11 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Interactable))]
 public class KeyItem : MonoBehaviour
 {
+    public static KeyItem Instance;
+
     void Awake()
     {
+        Instance = this;
         Interactable it = GetComponent<Interactable>();
         it.prompt = "E — взять ключ";
         if (it.onInteract == null) it.onInteract = new UnityEvent();
@@ -16,7 +19,7 @@ public class KeyItem : MonoBehaviour
     void Take()
     {
         Inventory.hasKey = true;
-        Hud.Say("Ключ был спрятан на стуле. Он подходит к самому левому складу.", 5f);
+        Sfx.Play("pickup", 0.8f);
         gameObject.SetActive(false);
     }
 }

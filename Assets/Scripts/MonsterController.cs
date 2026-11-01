@@ -36,6 +36,9 @@ public class MonsterController : MonoBehaviour
     public float alertDecayPerSecond = 5f;       // как быстро он успокаивается
     public float maxHuntSeconds = 45f;           // самая долгая охота
     public float cooldownSeconds = 40f;          // пауза после ухода
+    public float idleAlertPerSecond = 1.3f;      // в тишине тревога всё равно растёт: он выходит искать вас примерно раз в минуту
+    public float senseEvery = 4f;                // как часто он «чует», где вы, когда не слышит (раз в N секунд, с ошибкой)
+    public float senseError = 4f;                // ошибка чутья, м
 
     Vector3 home;
     Vector3 lastHeard;
@@ -45,7 +48,7 @@ public class MonsterController : MonoBehaviour
     float stepTimer;
     Phase phase = Phase.Away;
     float alert = 40f;
-    float huntTimer, calmTimer, cooldown;
+    float huntTimer, calmTimer, cooldown, senseTimer;
     bool dying;
 
     void Awake()
@@ -96,6 +99,15 @@ public class MonsterController : MonoBehaviour
         }
     }
 
+    // Стоит дома (в складе с монстром) и ничего не делает. Так он ждёт с самого начала игры.
+    public void ReturnHome()
+    {
+        gameObject.SetActive(true);
+        mode = Mode.Hidden;
+        transform.position = home;
+        transform.rotation = Quaternion.Euler(0f, 180f, 0f);   // лицом к воротам
+    }
+
     public void BeginHunt()
     {
         gameObject.SetActive(true);
@@ -117,7 +129,9 @@ public class MonsterController : MonoBehaviour
         float gain = 0f;
         if (Inventory.flashlightOn) gain += lightAlertPerSecond;
         if (Inventory.pulse > 90f) gain += (Inventory.pulse - 90f) * heartAlertPerSecond;
-        if (gain > 0f) alert += gain * dt; else alert -= alertDecayPerSecond * dt;
+        if (gain > 0f) alert += gain * dt;
+        else if (phase == Phase.Away) alert += idleAlertPerSecond * dt;      // сидит у себя и всё равно начинает искать
+        else alert -= alertDecayPerSecond * dt;
         alert = Mathf.Clamp(alert, 0f, 100f);
         cooldown -= dt;
 
@@ -148,11 +162,22 @@ public class MonsterController : MonoBehaviour
         bool hearsLight = Inventory.flashlightOn && dist < 60f;
         bool hearsHeart = Inventory.pulse > 95f && dist < 45f;
         if (hearsLight || hearsHeart) lastHeard = player.position;
+        else
+        {
+            // Не слышит — но время от времени чует, примерно где вы
+            senseTimer -= dt;
+            if (senseTimer <= 0f)
+            {
+                senseTimer = senseEvery;
+                Vector2 e = Random.insideUnitCircle * senseError;
+                lastHeard = player.position + new Vector3(e.x, 0f, e.y);
+            }
+        }
 
         float speed = baseSpeed;
         if (hearsLight) speed *= 2f;                                   // свет — приманка
         if (hearsHeart) speed *= 1f + (Inventory.pulse - 95f) / 60f;   // сердце — маяк
-        if (!hearsLight && !hearsHeart) speed *= 0.5f;                 // идёт к последнему услышанному месту
+        if (!hearsLight && !hearsHeart) speed *= 0.8f;                 // идёт туда, где чует вас
 
         MoveFlat(lastHeard, speed, dt);
         MatchHeight(player.position.y - 1f, dt);
@@ -228,6 +253,14 @@ public class MonsterController : MonoBehaviour
             p.transform.position = new Vector3(0f, 1.05f, -9f);
             p.transform.rotation = Quaternion.identity;
             if (cc != null) cc.enabled = true;
+        }
+
+        // Если игрок в момент смерти качал рохлю — отпускаем паллету и возвращаем управление
+        PalletCargo.CancelLifting();
+        if (p != null)
+        {
+            PlayerController pc = p.GetComponent<PlayerController>();
+            if (pc != null && !GameMenus.IsBlocking && !PhoneUI.IsOpen) pc.enabled = true;
         }
 
         Inventory.pulse = 70f;

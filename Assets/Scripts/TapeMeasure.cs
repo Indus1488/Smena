@@ -5,8 +5,11 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Interactable))]
 public class TapeMeasure : MonoBehaviour
 {
+    public static TapeMeasure Instance;
+
     void Awake()
     {
+        Instance = this;
         Interactable it = GetComponent<Interactable>();
         it.prompt = "E — взять рулетку";
         if (it.onInteract == null) it.onInteract = new UnityEvent();
@@ -16,6 +19,7 @@ public class TapeMeasure : MonoBehaviour
     void Take()
     {
         Inventory.hasTape = true;
+        Sfx.Play("pickup", 0.8f);
         Hud.Say("Рулетка у вас. Подойдите к коробке и нажмите E.");
         gameObject.SetActive(false);
     }

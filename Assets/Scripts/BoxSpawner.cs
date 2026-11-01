@@ -2,10 +2,11 @@ using UnityEngine;
 
 // Вешается на объект BoxSpawn. Через несколько секунд после старта «приезжает селлер»
 // и ставит коробку случайного размера. После каждой сделки приезжает следующий.
-// Клавиша B (для проверки) создаёт новую коробку сразу.
+// Клавиша B (для проверки) даёт +1 готовую коробку.
 public class BoxSpawner : MonoBehaviour
 {
     public static BoxSpawner Instance;
+    public static bool SellersStarted;   // пролог закончен, селлеры поехали
 
     public Material boxMaterial;       // подставляется построителем склада
     public Material labelMaterial;     // белая этикетка для QR (тоже подставляется построителем)
@@ -17,6 +18,7 @@ public class BoxSpawner : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        SellersStarted = false;
     }
 
     bool started;
@@ -27,12 +29,19 @@ public class BoxSpawner : MonoBehaviour
         if (!started && ReadyToStart())
         {
             started = true;
+            SellersStarted = true;
             if (!GameConfig.skipPrologue && Inventory.trashTotal > 0)
                 PhoneUI.AddMessage("Начальник", "Селлеры уже подъезжают. Начинай.");
             Invoke("SpawnBox", firstDelay);
         }
 
-        if (GameConfig.debugKeys && Input.GetKeyDown(debugKey)) SpawnBox();
+        // Тестовая клавиша B: +1 готовая коробка (сразу можно класть на паллету)
+        if (GameConfig.debugKeys && Input.GetKeyDown(debugKey))
+        {
+            Inventory.boxesReady++;
+            TrashManager.OnBoxReady();
+            Hud.Say("Тест: +1 готовая коробка (всего " + Inventory.boxesReady + ")", 2f);
+        }
     }
 
     bool ReadyToStart()

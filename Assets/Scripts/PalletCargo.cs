@@ -5,7 +5,7 @@ using UnityEngine.Events;
 // Паллета.
 // Сборка: E — положить готовую коробку (8 штук) -> E x3 — обмотать плёнкой.
 // Перевозка: возьмите рохлю, посмотрите на паллету и нажмите F (или E на обмотанной),
-//            качайте колесом мыши вверх -> паллета едет перед вами.
+//            качайте мышью вверх-вниз 8 раз -> паллета едет перед вами.
 // G — поставить паллету где угодно. E в жёлтой зоне — оставить на отгрузку.
 [RequireComponent(typeof(Interactable))]
 public class PalletCargo : MonoBehaviour
@@ -26,6 +26,10 @@ public class PalletCargo : MonoBehaviour
     State stateBefore;
     int wrapStep;
     int pumps;
+    bool pumpUp;           // ручка рохли поднята (ждём движения вниз)
+    float pumpTravel;      // сколько мышь прошла в текущую сторону
+    const float PumpStroke = 6f;   // длина движения мышью для половины качка
+    PlayerController lookLock;     // пока качаем, камера не крутится
     Vector3 liftBase;
     float speedBefore;
     System.Random rnd = new System.Random();
@@ -50,6 +54,28 @@ public class PalletCargo : MonoBehaviour
     }
 
     // Везёте или поднимаете ли сейчас какую-то паллету
+    // Качают ли сейчас какую-то паллету (камера в это время не крутится)
+    public static bool IsLifting()
+    {
+        for (int i = 0; i < All.Count; i++)
+            if (All[i] != null && All[i].state == State.Lifting) return true;
+        return false;
+    }
+
+    // Прервать подъём (например, если Володя поймал игрока): паллета опускается, камера снова крутится
+    public static void CancelLifting()
+    {
+        for (int i = 0; i < All.Count; i++)
+        {
+            PalletCargo p = All[i];
+            if (p == null || p.state != State.Lifting) continue;
+            p.transform.position = p.liftBase;
+            p.state = (p.stateBefore == State.Delivered) ? State.Wrapped : p.stateBefore;
+            if (p.lookLock != null) p.lookLock.enabled = true;
+            p.lookLock = null;
+        }
+    }
+
     public static bool IsBusy()
     {
         if (Carried != null) return true;
@@ -81,6 +107,7 @@ public class PalletCargo : MonoBehaviour
     // Строит деревянный поддон и коллайдер для взаимодействия
     public void Init(Material wood, Material box, Material film)
     {
+        capacity = GameConfig.palletCapacity;
         woodMat = wood;
         boxMat = box;
         filmMat = film;
@@ -149,14 +176,26 @@ public class PalletCargo : MonoBehaviour
 
         if (state == State.Lifting)
         {
-            // Качаем рохлей: колесо мыши вверх
-            if (Input.mouseScrollDelta.y > 0f)
+            // Качаем рохлей: мышь вверх, потом вниз — это один качок
+            float dy = (PhoneUI.IsOpen || GameMenus.IsBlocking) ? 0f : Input.GetAxisRaw("Mouse Y");
+            pumpTravel += dy;
+            if (!pumpUp && pumpTravel > PumpStroke)
             {
+                pumpUp = true;            // ручка поднята, теперь вниз
+                pumpTravel = 0f;
+            }
+            else if (pumpUp && pumpTravel < -PumpStroke)
+            {
+                pumpUp = false;           // ручка опущена: качок засчитан
+                pumpTravel = 0f;
                 pumps++;
+                Sfx.Play("jack_pump", 0.7f);
                 transform.position = liftBase + Vector3.up * (0.1f * pumps / pumpsNeeded);
-                Hud.Say("Качайте колесом мыши: " + pumps + "/" + pumpsNeeded, 30f);
+                Hud.Say("Качайте мышью вверх-вниз: " + pumps + "/" + pumpsNeeded, 30f);
                 if (pumps >= pumpsNeeded) PickUp();
             }
+            if (!pumpUp && pumpTravel < 0f) pumpTravel = 0f;   // в начале качка лишнее движение вниз не копится
+            if (pumpUp && pumpTravel > 0f) pumpTravel = 0f;
         }
         else if (state == State.Carried)
         {
@@ -186,7 +225,7 @@ public class PalletCargo : MonoBehaviour
                 it.prompt = Inventory.hasJack ? "E — поднять рохлей" : "Паллета готова. Нужна рохля";
                 break;
             case State.Lifting:
-                it.prompt = "Качайте колесом мыши вверх";
+                it.prompt = "Качайте мышью вверх-вниз";
                 break;
             case State.Delivered:
                 it.prompt = "Паллета ждёт газель" + hint;
@@ -224,6 +263,7 @@ public class PalletCargo : MonoBehaviour
 
             case State.Full:
                 wrapStep++;
+                Sfx.Play("film_wrap", 0.8f);
                 if (wrapStep < 3) Hud.Say("Обматываю плёнкой: " + wrapStep + "/3", 2f);
                 else Wrap();
                 break;
@@ -266,8 +306,15 @@ public class PalletCargo : MonoBehaviour
 
         state = State.Lifting;
         pumps = 0;
+        pumpUp = false;
+        pumpTravel = 0f;
         liftBase = transform.position;
-        Hud.Say("Качайте колесом мыши вверх: 0/" + pumpsNeeded, 30f);
+
+        GameObject pl = GameObject.Find("Player");
+        lookLock = pl != null ? pl.GetComponent<PlayerController>() : null;
+        if (lookLock != null) lookLock.enabled = false;   // мышь качает рохлю, а не крутит камеру
+
+        Hud.Say("Качайте мышью вверх-вниз: 0/" + pumpsNeeded, 30f);
     }
 
     // Паллета на рохле: едет перед игроком, скорость падает вдвое
@@ -279,6 +326,9 @@ public class PalletCargo : MonoBehaviour
             Hud.Say("Объект Player не найден.");
             return;
         }
+
+        if (lookLock != null) lookLock.enabled = true;
+        lookLock = null;
 
         state = State.Carried;
         Carried = this;

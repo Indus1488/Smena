@@ -102,18 +102,18 @@ public class FinaleController : MonoBehaviour
             Vector3 fwd = pgo.transform.forward;
             fwd.y = 0f;
             fwd.Normalize();
-            Vector3 start = pgo.transform.position + fwd * 35f;
+            Vector3 start = pgo.transform.position + fwd * 10f;
             start.y = pgo.transform.position.y - 1f;
             mt.position = start;
 
             // Лампа у лица, чтобы в последний момент его было видно
             GameObject lg = new GameObject("ScareLight");
             lg.transform.SetParent(mt, false);
-            lg.transform.localPosition = new Vector3(0f, 1.9f, 0.9f);
+            lg.transform.localPosition = new Vector3(0.3f, 2.3f, 0.6f);
             Light l = lg.AddComponent<Light>();
             l.type = LightType.Point;
-            l.range = 8f;
-            l.intensity = 3f;
+            l.range = 3.5f;
+            l.intensity = 0.7f;
             l.color = new Color(1f, 0.9f, 0.8f);
 
             AudioClip scream = Resources.Load<AudioClip>("finale_scream");
@@ -124,13 +124,20 @@ public class FinaleController : MonoBehaviour
                 Vector3 target = cam.transform.position;
                 Vector3 dir = target - mt.position;
                 dir.y = 0f;
-                if (dir.magnitude < 1.2f) break;
+                if (dir.magnitude < 0.9f) break;
                 mt.rotation = Quaternion.LookRotation(dir.normalized, Vector3.up);
-                mt.position += dir.normalized * 16f * Time.deltaTime;
+                mt.position += dir.normalized * 14f * Time.deltaTime;
                 yield return null;
             }
         }
 
-        CenterText.Show("СМЕНА ОКОНЧЕНА", 100000f, true);
+        CenterText.Show("СМЕНА ОКОНЧЕНА", 4f, true);
+        yield return new WaitForSeconds(4f);
+
+        // Итоги смены
+        string verdict = Inventory.sellerAnger == 0 ? "Селлеры вас не запомнили."
+            : (Inventory.sellerAnger < 4 ? "Кое-кто вас запомнил." : "Вас запомнили многие.");
+        CenterText.Show("СМЕНА ОКОНЧЕНА\n\nЗаработано: " + Hud.totalEarned + " руб.\nНедовольных селлеров: "
+            + Inventory.sellerAnger + "\n" + verdict + "\n\nEsc — выход", 100000f, true);
     }
 }

@@ -44,3 +44,8 @@ Thumbs.db
 # Автосгенерированный код Unity
 sysinfo.txt
 crashlytics-build.properties
+/_downloads/
+
+# Автовосстановление сцен Unity после краша
+/[Aa]ssets/_Recovery/
+/[Aa]ssets/_Recovery.meta

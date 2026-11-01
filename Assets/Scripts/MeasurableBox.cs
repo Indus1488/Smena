@@ -84,6 +84,7 @@ public class MeasurableBox : MonoBehaviour
         }
         if (step >= 3) return;
 
+        Sfx.Play("tape_measure", 0.8f);
         if (step == 0) Hud.Say("Длина: " + lengthCm + " см");
         else if (step == 1) Hud.Say("Ширина: " + widthCm + " см");
         else Hud.Say("Высота: " + heightCm + " см");
@@ -167,12 +168,14 @@ public class MeasurableBox : MonoBehaviour
         workLeft--;
         if (workLeft > 0)
         {
+            Sfx.Play("scan", 0.8f);
             Hud.Say("Сканирую QR...");
             Hud.ShowPhone("задача", "FBO: проверьте QR на коробке", "Осталось: " + workLeft);
             UpdatePrompt();
         }
         else
         {
+            Sfx.Play("scan", 0.8f);
             Hud.Say("QR совпал.");
             FinishWork();
         }
@@ -200,13 +203,14 @@ public class MeasurableBox : MonoBehaviour
         UpdatePrompt();
         ActiveFbsBox = null;
         Inventory.boxesReady++;
+        TrashManager.OnBoxReady();
         Hud.ShowPhone("задача", "Коробка готова", "Готово коробок: " + Inventory.boxesReady);
         Invoke("Leave", 1.5f);
     }
 
     void Leave()
     {
-        if (StickerBoard.Instance != null) StickerBoard.Instance.Clear();
+        // стикеры остаются на доске (StickerBoard сам срывает старые, когда места кончаются)
         if (BoxSpawner.Instance != null) BoxSpawner.Instance.SpawnLater(4f);
         Destroy(gameObject);   // позже коробка будет отправляться в зону паллеты
     }

@@ -52,7 +52,10 @@ public class Flashlight : MonoBehaviour
             if (Inventory.flashlightBattery <= 0f)
                 Hud.Say("Батарея села. Нужен запас (T — сменить батарею).", 3f);
             else
+            {
                 on = !on;
+                Sfx.Play("flashlight", 0.8f);
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.T)) ReplaceBattery();
@@ -99,6 +102,7 @@ public class Flashlight : MonoBehaviour
         }
         Inventory.spareBatteries--;
         Inventory.flashlightBattery = 100f;
+        Sfx.Play("battery", 0.8f);
         Hud.Say("Батарея заменена.", 2f);
     }
 }
