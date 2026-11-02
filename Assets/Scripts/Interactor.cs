@@ -18,10 +18,10 @@ public class Interactor : MonoBehaviour
     void OnGUI()
     {
         if (current == null) return;
-        GUIStyle style = new GUIStyle(GUI.skin.label);
+        GUIStyle style = new GUIStyle(UITheme.Label());
         style.fontSize = 24;
         style.alignment = TextAnchor.MiddleCenter;
-        style.normal.textColor = Color.white;
+        style.normal.textColor = UITheme.Text;
         GUI.Label(new Rect(0, Screen.height * 0.6f, Screen.width, 40), current.prompt, style);
     }
 }

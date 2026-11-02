@@ -144,7 +144,7 @@ public class WarmLook : MonoBehaviour
             UniversalAdditionalCameraData data = cam.GetUniversalAdditionalCameraData();
             if (data != null)
             {
-                data.renderPostProcessing = on;
+                data.renderPostProcessing = on || Brightness.NeedsPost;
                 data.antialiasing = on ? AntialiasingMode.FastApproximateAntialiasing : AntialiasingMode.None;
             }
         }

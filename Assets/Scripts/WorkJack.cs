@@ -20,7 +20,7 @@ public class WorkJack : MonoBehaviour
     {
         Inventory.hasJack = true;
         Sfx.Play("pickup", 0.8f);
-        Hud.Say("Рохля у вас. Подойдите к обмотанной паллете.", 4f);
+        Hud.Say("Рохля у тебя. Подойди к обмотанной паллете.", 4f);
         gameObject.SetActive(false);
     }
 

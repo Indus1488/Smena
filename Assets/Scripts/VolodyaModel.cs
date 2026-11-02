@@ -148,6 +148,16 @@ public class VolodyaModel : MonoBehaviour
     public float headTilt = 0.4f;       // голова набок
 
     Animator anim;
+
+    // Голова (для скримера: её ставят прямо перед камерой)
+    public Transform Head
+    {
+        get
+        {
+            if (anim != null) { Transform h = anim.GetBoneTransform(HumanBodyBones.Head); if (h != null) return h; }
+            return head;
+        }
+    }
     HumanPoseHandler poseHandler;
     HumanPose pose;
     readonly System.Collections.Generic.Dictionary<string, int> muscle = new System.Collections.Generic.Dictionary<string, int>();
@@ -269,10 +279,11 @@ public class VolodyaModel : MonoBehaviour
         lastPos = transform.position;
 
         // В сценах «по стене» и в скримере он несётся слишком быстро для шагов — замираем в рывке
-        bool scripted = mc != null && mc.mode == MonsterController.Mode.Scripted;
+        bool running = mc != null && mc.scriptRun;
+        bool scripted = mc != null && mc.mode == MonsterController.Mode.Scripted && !running;
         float walk = scripted ? 0f : Mathf.Clamp01(speed / 2f);
 
-        phase += Time.deltaTime * (2.5f + speed * 2.2f);
+        phase += Time.deltaTime * (2.5f + Mathf.Min(speed, 6f) * 2.2f);
         float s = Mathf.Sin(phase);
 
         if (poseHandler != null)

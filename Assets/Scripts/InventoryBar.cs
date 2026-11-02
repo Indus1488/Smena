@@ -65,19 +65,19 @@ public class InventoryBar : MonoBehaviour
                 if (KeyItem.Instance != null) KeyItem.Instance.gameObject.SetActive(true);
                 break;
             case "jack":
-                if (PalletCargo.IsBusy()) { Hud.Say("Сначала опустите паллету (G).", 2f); return; }
+                if (PalletCargo.IsBusy()) { Hud.Say("Сначала поставь паллету (G).", 2f); return; }
                 Inventory.hasJack = false;
                 if (WorkJack.Instance != null) WorkJack.Instance.Return();
                 break;
             case "bag":
-                Hud.Say("Мешок нужно выкинуть в мусорку под эстакадой.", 3f);
+                Hud.Say("Мешок — в контейнер под эстакадой.", 3f);
                 return;
             default:
-                Hud.Say("Это остаётся у вас.", 2f);
+                Hud.Say("Это остаётся с тобой.", 2f);
                 return;
         }
         Sfx.Play("pickup", 0.6f);
-        Hud.Say("Положено на место.", 2f);
+        Hud.Say("Положил на место.", 2f);
     }
 
     void OnGUI()
@@ -93,11 +93,13 @@ public class InventoryBar : MonoBehaviour
         {
             Rect r = new Rect(x0 + i * (w + gap), y, w, h);
             bool sel = i == selected;
-            GUI.color = sel ? new Color(1f, 0.85f, 0.45f, 0.9f) : new Color(0f, 0f, 0f, 0.55f);
-            GUI.DrawTexture(new Rect(r.x - 2, r.y - 2, r.width + 4, r.height + 4), Texture2D.whiteTexture);
-            GUI.color = new Color(0.08f, 0.08f, 0.08f, 0.85f);
-            GUI.DrawTexture(r, Texture2D.whiteTexture);
-            GUI.color = Color.white;
+            if (sel)
+            {
+                GUI.color = UITheme.Accent;
+                GUI.DrawTexture(new Rect(r.x - 2, r.y - 2, r.width + 4, r.height + 4), Texture2D.whiteTexture);
+                GUI.color = Color.white;
+            }
+            UITheme.DrawPanel(r);
 
             GUI.Label(new Rect(r.x + 5, r.y + 2, 20, 18), (i + 1).ToString(), numS);
             GUI.Label(new Rect(r.x, r.y + 14, r.width, 24), slots[i].title, titleS);
@@ -108,13 +110,13 @@ public class InventoryBar : MonoBehaviour
 
     void MakeStyles()
     {
-        titleS = new GUIStyle(GUI.skin.label) { fontSize = 17, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
-        titleS.normal.textColor = Color.white;
-        subS = new GUIStyle(GUI.skin.label) { fontSize = 14, alignment = TextAnchor.MiddleCenter };
-        subS.normal.textColor = new Color(1f, 0.85f, 0.55f);
-        numS = new GUIStyle(GUI.skin.label) { fontSize = 13 };
+        titleS = new GUIStyle(UITheme.Label()) { fontSize = 17, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
+        titleS.normal.textColor = UITheme.Text;
+        subS = new GUIStyle(UITheme.Label()) { fontSize = 14, alignment = TextAnchor.MiddleCenter };
+        subS.normal.textColor = UITheme.Accent;
+        numS = new GUIStyle(UITheme.Label()) { fontSize = 13 };
         numS.normal.textColor = new Color(1f, 1f, 1f, 0.6f);
-        hintS = new GUIStyle(GUI.skin.label) { fontSize = 14, alignment = TextAnchor.MiddleCenter };
+        hintS = new GUIStyle(UITheme.Label()) { fontSize = 14, alignment = TextAnchor.MiddleCenter };
         hintS.normal.textColor = new Color(1f, 1f, 1f, 0.55f);
     }
 }

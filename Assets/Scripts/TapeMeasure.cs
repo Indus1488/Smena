@@ -20,7 +20,7 @@ public class TapeMeasure : MonoBehaviour
     {
         Inventory.hasTape = true;
         Sfx.Play("pickup", 0.8f);
-        Hud.Say("Рулетка у вас. Подойдите к коробке и нажмите E.");
+        Hud.Say("Рулетка есть. Подойди к коробке селлера и нажми E.");
         gameObject.SetActive(false);
     }
 }

@@ -44,6 +44,7 @@ public class PulseSystem : MonoBehaviour
 
     void Update()
     {
+        if (!GameConfig.horror) { Inventory.pulse = 70f; if (heart.isPlaying) heart.Stop(); return; }
         if (ActController.Act != 3)
         {
             if (heart.isPlaying) heart.Stop();
@@ -160,7 +161,7 @@ public class PulseSystem : MonoBehaviour
             {
                 Inventory.pulse = 62f;
                 panic = 0f;
-                Hud.Say("Вы успокоились.", 4f);
+                Hud.Say("Сердце успокоилось.", 4f);
                 StopBreathing();
             }
         }
@@ -169,14 +170,14 @@ public class PulseSystem : MonoBehaviour
             panic = Mathf.Min(60f, panic + 8f);
             Inventory.pulse += 6f;
             if (monster != null) monster.Approach(4f);
-            Say("Слишком долго: громкий всхрап. Он услышал.");
+            Say("Слишком долго — вдох сорвался. Он услышал.");
         }
         else
         {
             panic = Mathf.Min(60f, panic + 8f);
             Inventory.pulse += 8f;
             if (monster != null) monster.Approach(2f);
-            Say("Не хватило воздуха. Пульс скачет.");
+            Say("Не хватило воздуха. Сердце колотится.");
         }
     }
 
@@ -197,11 +198,11 @@ public class PulseSystem : MonoBehaviour
 
         if (bigStyle == null)
         {
-            bigStyle = new GUIStyle(GUI.skin.label);
+            bigStyle = new GUIStyle(UITheme.Label());
             bigStyle.fontSize = 40;
             bigStyle.fontStyle = FontStyle.Bold;
             bigStyle.alignment = TextAnchor.MiddleCenter;
-            bigStyle.normal.textColor = Color.white;
+            bigStyle.normal.textColor = UITheme.Text;
 
             midStyle = new GUIStyle(bigStyle);
             midStyle.fontSize = 26;
@@ -228,7 +229,7 @@ public class PulseSystem : MonoBehaviour
 
         // Тексты
         GUI.Label(new Rect(0, Screen.height * 0.30f, Screen.width, 60), "ДЫХАНИЕ  " + good + "/" + GameConfig.breathsNeeded, bigStyle);
-        GUI.Label(new Rect(0, Screen.height * 0.40f, Screen.width, 30), "Удерживайте ПРОБЕЛ (вдох), отпустите в зелёной зоне.   V — выйти", smallStyle);
+        GUI.Label(new Rect(0, Screen.height * 0.40f, Screen.width, 30), "Держи ПРОБЕЛ — вдох, отпусти в зелёной зоне.   V — выйти", smallStyle);
         if (Time.time < resultUntil)
             GUI.Label(new Rect(0, Screen.height * 0.67f, Screen.width, 40), result, midStyle);
     }

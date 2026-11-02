@@ -60,7 +60,7 @@ public class MeasurableBox : MonoBehaviour
             case 0: it.prompt = Inventory.hasTape ? "E — измерить длину" : "Нужна рулетка"; break;
             case 1: it.prompt = "E — измерить ширину"; break;
             case 2: it.prompt = "E — измерить высоту"; break;
-            case 3: it.prompt = "Выберите цену на телефоне"; break;
+            case 3: it.prompt = "Назови цену в телефоне"; break;
             case 5:
                 it.prompt = (order == OrderType.FBO)
                     ? "E — проверить QR (осталось " + workLeft + ")"
@@ -79,7 +79,7 @@ public class MeasurableBox : MonoBehaviour
         }
         if (!Inventory.hasTape)
         {
-            Hud.Say("Сначала возьмите рулетку со стола.");
+            Hud.Say("Нужна рулетка. Она на столе у правой стены.");
             return;
         }
         if (step >= 3) return;
@@ -99,6 +99,18 @@ public class MeasurableBox : MonoBehaviour
         }
     }
 
+    static string Pick(params string[] v) { return v[Random.Range(0, v.Length)]; }
+
+    // Жалобы селлеров приходят начальнику, а он пишет тебе
+    static void AngerSms()
+    {
+        int n = Inventory.sellerAnger;
+        string text = n == 1 ? "На тебя пожаловался селлер. Не задирай цены."
+            : n < 4 ? "Ещё жалоба. Это уже " + n + "-я за смену."
+            : "Жалоб уже " + n + ". Селлеры тебя запомнили. Будь осторожнее, когда стемнеет.";
+        PhoneUI.AddMessage("Начальник", text);
+    }
+
     // ---------- Сделка ----------
     // Вызывается из телефона, когда игрок нажал Enter
     public void Propose(int price)
@@ -112,7 +124,8 @@ public class MeasurableBox : MonoBehaviour
             step = 4;
             UpdatePrompt();
             Inventory.sellerAnger++;
-            Hud.Say("Селлер: «Вы с ума сошли? Я поеду в другое место.»", 4f);
+            AngerSms();
+            Hud.Say(Pick("Селлер: «Вы с ума сошли? Поеду в другое место.»", "Селлер: «За такие деньги я сам отвезу.»", "Селлер: «Грабёж. До свидания.»", "Селлер молча забирает коробку и уходит."), 4f);
             Hud.ShowPhone("ответ", "Селлер отказался", "Заработано: 0 руб.");
             Destroy(gameObject, 3f);
             if (BoxSpawner.Instance != null) BoxSpawner.Instance.SpawnLater(7f);
@@ -122,13 +135,14 @@ public class MeasurableBox : MonoBehaviour
         if (markup > 0.08f)
         {
             Inventory.sellerAnger++;
+            AngerSms();
             Hud.AddMoney(price);
-            Hud.Say("Селлер молча платит. Он это запомнит.", 4f);
+            Hud.Say(Pick("Селлер молча платит. Он это запомнит.", "Селлер: «Ладно... Я вас запомнил.»", "Селлер платит и долго смотрит тебе в глаза.", "Селлер: «Дорого у вас. Но выбора нет.»"), 4f);
         }
         else
         {
             Hud.AddMoney(price);
-            Hud.Say("Селлер: «Спасибо, всё честно.»", 4f);
+            Hud.Say(Pick("Селлер: «Спасибо, всё честно.»", "Селлер: «Нормально. Буду к вам возить.»", "Селлер: «Отлично, спасибо.»", "Селлер кивает и платит."), 4f);
         }
 
         Invoke("StartWork", 2.5f);   // сначала даём прочитать реакцию, потом выдаём задание
@@ -146,13 +160,13 @@ public class MeasurableBox : MonoBehaviour
         {
             workLeft = Random.Range(3, 6);
             ActiveFbsBox = this;
-            Hud.ShowPhone("задача", "FBS: клейте стикеры на доску", "Осталось: " + workLeft);
+            Hud.ShowPhone("задача", "FBS: клей стикеры на доску", "Осталось: " + workLeft);
         }
         else
         {
             workLeft = 2;
             AddLabel();
-            Hud.ShowPhone("задача", "FBO: проверьте QR на коробке", "Осталось: " + workLeft);
+            Hud.ShowPhone("задача", "FBO: проверь QR на коробке", "Осталось: " + workLeft);
         }
         UpdatePrompt();
     }
@@ -161,7 +175,7 @@ public class MeasurableBox : MonoBehaviour
     {
         if (order != OrderType.FBO)
         {
-            Hud.Say("Стикеры нужно клеить на доску у левой стены.");
+            Hud.Say("Стикеры клеятся на доску над столом у правой стены.");
             return;
         }
 
@@ -169,14 +183,14 @@ public class MeasurableBox : MonoBehaviour
         if (workLeft > 0)
         {
             Sfx.Play("scan", 0.8f);
-            Hud.Say("Сканирую QR...");
-            Hud.ShowPhone("задача", "FBO: проверьте QR на коробке", "Осталось: " + workLeft);
+            Hud.Say("Сканирую QR…");
+            Hud.ShowPhone("задача", "FBO: проверь QR на коробке", "Осталось: " + workLeft);
             UpdatePrompt();
         }
         else
         {
             Sfx.Play("scan", 0.8f);
-            Hud.Say("QR совпал.");
+            Hud.Say("QR совпал с заказом.");
             FinishWork();
         }
     }
@@ -188,11 +202,11 @@ public class MeasurableBox : MonoBehaviour
         if (workLeft > 0)
         {
             Hud.Say("Стикер на доске. Осталось: " + workLeft);
-            Hud.ShowPhone("задача", "FBS: клейте стикеры на доску", "Осталось: " + workLeft);
+            Hud.ShowPhone("задача", "FBS: клей стикеры на доску", "Осталось: " + workLeft);
         }
         else
         {
-            Hud.Say("Все стикеры на месте.");
+            Hud.Say("Все стикеры на доске.");
             FinishWork();
         }
     }

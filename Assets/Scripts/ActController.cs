@@ -87,8 +87,9 @@ public class ActController : MonoBehaviour
         // 5. Тьма
         yield return StartCoroutine(Darken());
         Inventory.hasFlashlight = true;
-        Hud.Say("Фонарик: Q", 5f);
-        PhoneUI.AddMessage("Начальник", "Свет на районе отключили. Береги батарею и не свети зря. Запас можно купить в магазине.");
+        Hud.Say("В кармане фонарик. Q — включить.", 5f);
+        PhoneUI.AddMessage("Начальник", "По норме: " + GameConfig.quotaPallets + " паллеты до конца смены. Увезено " + Inventory.palletsShipped + ". Не подведи.");
+        PhoneUI.AddMessage("Начальник", "Свет на районе вырубило. Работаем дальше. Батарейки береги, лишние — в магазине.");
 
         sequenceRunning = false;
     }
@@ -128,10 +129,11 @@ public class ActController : MonoBehaviour
     IEnumerator Streak(List<Transform> lamps)
     {
         MonsterController m = MonsterController.Find();
-        if (m == null)
+        if (m == null || !GameConfig.horror)
         {
-            Debug.LogWarning("Володя не найден. Пересоберите склад: Smena, Построить склад (с нуля).");
-            SmashLamp();
+            if (m == null) Debug.LogWarning("Володя не найден. Пересоберите склад: Smena, Построить склад (с нуля).");
+            yield return new WaitForSeconds(0.5f);
+            SmashLamp();       // без хоррора лампы просто гаснут
             yield break;
         }
 
@@ -274,7 +276,7 @@ public class ActController : MonoBehaviour
         Act = 3;
         Hud.minutes = Mathf.Max(Hud.minutes, 19.5f * 60f);
         Inventory.hasFlashlight = true;
-        PhoneUI.AddMessage("Начальник", "Цены просели, селлеры нервные. Копи на газель и не светись зря.");
+        PhoneUI.AddMessage("Начальник", "Цены просели, селлеры злые. Отгрузи что успеешь. И не свети фонарём почём зря — мало ли кто увидит.");
 
         MonsterController m = MonsterController.Find();
         if (m != null) m.BeginHunt();

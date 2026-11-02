@@ -175,23 +175,26 @@ public class ModelSwap : MonoBehaviour
         GameObject[] list = models[e.key];
         Vector3 p = target.position;
         int idx = Mathf.Abs(Mathf.RoundToInt(p.x * 73f + p.z * 31f + p.y * 17f)) % list.Length;
-        GameObject m = Instantiate(list[idx], holder, false);
+        // Модель кладём в промежуточный «Fit»: собственный поворот и масштаб модели из файла не трогаем
+        // (у моделей из 3ds Max там поворот «Z вверх»), а поворачиваем и масштабируем только Fit
+        Transform fit = new GameObject("Fit").transform;
+        fit.SetParent(holder, false);
+        GameObject m = Instantiate(list[idx], fit, false);
         m.name = list[idx].name;
-        m.transform.localPosition = Vector3.zero;
         foreach (Collider c in m.GetComponentsInChildren<Collider>()) Destroy(c);
         FixMaterials(m, e.key);
 
         List<Renderer> mr = new List<Renderer>(m.GetComponentsInChildren<Renderer>());
         Bounds have;
         float rot = e.rotY;
-        m.transform.localRotation = Quaternion.Euler(0, rot, 0);
+        fit.localRotation = Quaternion.Euler(0, rot, 0);
         if (!Measure(mr, holder, out have)) { Destroy(holder.gameObject); return; }
 
         // Модель лежит «вдоль», а место «поперёк» — доворачиваем на 90°
         if (Elongated(want) && Elongated(have) && (want.size.x > want.size.z) != (have.size.x > have.size.z))
         {
             rot += 90f;
-            m.transform.localRotation = Quaternion.Euler(0, rot, 0);
+            fit.localRotation = Quaternion.Euler(0, rot, 0);
             Measure(mr, holder, out have);
         }
 
@@ -204,14 +207,14 @@ public class ModelSwap : MonoBehaviour
         }
         else if (Mathf.RoundToInt(rot / 90f) % 2 != 0)
         {
-            k = new Vector3(k.z, k.y, k.x);   // у повёрнутой модели оси X и Z поменялись местами
+            k = new Vector3(k.z, k.y, k.x);   // у повёрнутого Fit оси X и Z поменялись местами
         }
-        m.transform.localScale = Vector3.Scale(m.transform.localScale, k);
+        fit.localScale = k;
 
         // 5. Ставим на место: по центру сверху, низом на пол
         Measure(mr, holder, out have);
         Vector3 shift = new Vector3(want.center.x - have.center.x, want.min.y - have.min.y, want.center.z - have.center.z);
-        m.transform.localPosition += shift;
+        fit.localPosition += shift;
 
         foreach (Renderer r in hide) r.enabled = false;
         swapped.Add(new Swapped { holder = holder.gameObject, hidden = hide });

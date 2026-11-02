@@ -35,7 +35,7 @@ public class Objectives : MonoBehaviour
 
         // Полный мусорный мешок
         if (Inventory.trashBag >= GameConfig.trashBagSize)
-            return "Мешок полный: выкинь его в мусорку под эстакадой";
+            return "Мешок полный: отнеси его в контейнер под эстакадой";
 
         // Пролог: мусор на складе
         if (!GameConfig.skipPrologue && Inventory.trashLeft > 0)
@@ -46,8 +46,8 @@ public class Objectives : MonoBehaviour
         string prefix = "";
         if (ActController.Act >= 2 && Inventory.hasFlashlight && !Inventory.flashlightOn && Inventory.flashlightBattery > 0f && ActController.Act == 2)
             prefix = "Темно — фонарик на Q. ";
-        if (ActController.Act >= 3)
-            prefix = "Тише: свет и пульс его привлекают (V — дыхание). ";
+        if (ActController.Act >= 3 && GameConfig.horror)
+            prefix = "Тише: свет и сердце его приманивают (V — отдышаться). ";
 
         // Перевозка паллеты важнее всего остального
         PalletCargo carried = PalletCargo.Carried;
@@ -84,7 +84,7 @@ public class Objectives : MonoBehaviour
         if (Inventory.boxesReady > 0)
         {
             if (loading != null) return prefix + "Положи готовые коробки на паллету (" + Inventory.boxesReady + " шт.)";
-            if (Inventory.palletStock <= 0) return prefix + "Нет паллеты: купи в телефоне (Tab → Магазин)";
+            if (Inventory.palletStock <= 0) return prefix + "Нет пустой паллеты: купи в телефоне (Tab → Магазин), её привезут во двор";
         }
 
         // Газель
@@ -97,23 +97,23 @@ public class Objectives : MonoBehaviour
         }
 
         if (ActController.Act >= 2 && Inventory.flashlightBattery <= 0f && Inventory.spareBatteries <= 0)
-            return prefix + "Фонарик сел: батареи в складе слева (нужен ключ) или в магазине";
+            return prefix + "Фонарик сел: батарейки в крайнем левом складе (нужен ключ) или в магазине";
 
-        return prefix + "Жди селлеров";
+        return prefix + "Жди следующего селлера";
     }
 
     // ---------- Рисование ----------
     void MakeStyles()
     {
-        taskS = new GUIStyle(GUI.skin.label);
+        taskS = new GUIStyle(UITheme.Label());
         taskS.fontSize = 20;
         taskS.alignment = TextAnchor.UpperCenter;
         taskS.wordWrap = true;
         taskS.normal.textColor = new Color(1f, 0.93f, 0.7f);
 
-        keysS = new GUIStyle(GUI.skin.label);
+        keysS = new GUIStyle(UITheme.Label());
         keysS.fontSize = 18;
-        keysS.normal.textColor = Color.white;
+        keysS.normal.textColor = UITheme.Text;
     }
 
     void Shadowed(Rect r, string text, GUIStyle st)
@@ -155,9 +155,7 @@ public class Objectives : MonoBehaviour
                 Shadowed(new Rect(20, Screen.height - 34, 300, 26), "F1 — клавиши", keysS);
                 return;
             }
-            GUI.color = new Color(0f, 0f, 0f, 0.75f);
-            GUI.DrawTexture(new Rect(14, Screen.height - 384, 430, 370), Texture2D.whiteTexture);
-            GUI.color = Color.white;
+            UITheme.DrawPanel(new Rect(14, Screen.height - 384, 430, 370));
             string keys =
                 "WASD — ходить, мышь — смотреть\n" +
                 "E — действие (взять, измерить, войти)\n" +
@@ -168,7 +166,7 @@ public class Objectives : MonoBehaviour
                 "G — поставить паллету, R — вернуть рохлю\n" +
                 "Q — фонарик, T — сменить батарею\n" +
                 "1–6 — выбрать предмет, X — положить на место\n" +
-                "V — дыхание, пробел — вдох\n" +
+                "V — отдышаться, пробел — вдох\n" +
                 "F1 — скрыть эту подсказку";
             GUI.Label(new Rect(28, Screen.height - 372, 410, 354), keys, keysS);
         }

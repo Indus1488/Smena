@@ -39,12 +39,12 @@ public class TrashPiece : MonoBehaviour
     {
         if (!Inventory.hasMop)
         {
-            Hud.Say("Нужна швабра у стены.");
+            Hud.Say("Нужна швабра. Она у левой стены.");
             return;
         }
         if (Inventory.trashBag >= GameConfig.trashBagSize)
         {
-            Hud.Say("Мешок полный. Выкинь его в мусорку под эстакадой.", 3f);
+            Hud.Say("Мешок полный. Отнеси его в контейнер под эстакадой.", 3f);
             return;
         }
 
@@ -56,10 +56,10 @@ public class TrashPiece : MonoBehaviour
         {
             Inventory.trashLeft--;
             if (Inventory.trashLeft <= 0 && !BoxSpawner.SellersStarted)
-                Hud.Say(full ? "Склад чист. Мешок полный — выкинь его в мусорку под эстакадой." : "Склад чист. Скоро приедет первый селлер.", 4f);
-            else if (full) Hud.Say("Мешок полный. Выкинь его в мусорку под эстакадой.", 3f);
+                Hud.Say(full ? "Склад чист. Мешок полный — отнеси его в контейнер под эстакадой." : "Склад чист. Скоро приедет первый селлер.", 4f);
+            else if (full) Hud.Say("Мешок полный. Отнеси его в контейнер под эстакадой.", 3f);
         }
-        else if (full) Hud.Say("Мешок полный. Выкинь его в мусорку под эстакадой.", 3f);
+        else if (full) Hud.Say("Мешок полный. Отнеси его в контейнер под эстакадой.", 3f);
         Destroy(gameObject);
     }
 }

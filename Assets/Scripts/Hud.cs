@@ -115,18 +115,18 @@ public class Hud : MonoBehaviour
     // ---- Рисование ----
     void MakeStyles()
     {
-        big = new GUIStyle(GUI.skin.label);
+        big = new GUIStyle(UITheme.Label());
         big.fontSize = 34;
         big.fontStyle = FontStyle.Bold;
-        big.normal.textColor = Color.white;
+        big.normal.textColor = UITheme.Text;
 
-        normal = new GUIStyle(GUI.skin.label);
+        normal = new GUIStyle(UITheme.Label());
         normal.fontSize = 22;
-        normal.normal.textColor = Color.white;
+        normal.normal.textColor = UITheme.Text;
 
         small = new GUIStyle(normal);
         small.fontSize = 16;
-        small.normal.textColor = new Color(0.75f, 0.75f, 0.8f);
+        small.normal.textColor = UITheme.Dim;
 
         centered = new GUIStyle(normal);
         centered.alignment = TextAnchor.MiddleCenter;
@@ -135,12 +135,12 @@ public class Hud : MonoBehaviour
         phoneTitleStyle = new GUIStyle(normal);
         phoneTitleStyle.fontSize = 24;
         phoneTitleStyle.fontStyle = FontStyle.Bold;
-        phoneTitleStyle.normal.textColor = new Color(0.6f, 0.9f, 1f);
+        phoneTitleStyle.normal.textColor = UITheme.Accent;
 
         phoneBg = new Texture2D(1, 1);
         phoneBg.SetPixel(0, 0, new Color(0.04f, 0.05f, 0.08f, 0.92f));
         phoneBg.Apply();
-        phoneBox = new GUIStyle(GUI.skin.box);
+        phoneBox = new GUIStyle(UITheme.Panel());
         phoneBox.normal.background = phoneBg;
     }
 
@@ -163,14 +163,13 @@ public class Hud : MonoBehaviour
         int m = total % 60;
         Shadowed(new Rect(20, 14, 300, 44), string.Format("{0:00}:{1:00}", h, m), big);
         Shadowed(new Rect(20, 58, 300, 32), money + " руб.", normal);
-        Shadowed(new Rect(20, 92, 400, 24), "Недовольных селлеров: " + Inventory.sellerAnger, small);
-        Shadowed(new Rect(20, 116, 400, 24), "Готово коробок: " + Inventory.boxesReady, small);
-        Shadowed(new Rect(20, 140, 400, 24), "Паллет к отправке: " + Inventory.palletsReady, small);
-        if (ActController.Act >= 3)
-            Shadowed(new Rect(20, 212, 500, 24), "Пульс: " + Mathf.RoundToInt(Inventory.pulse) + "   (V — дыхание)", small);
+        Shadowed(new Rect(20, 92, 400, 24), "Готово коробок: " + Inventory.boxesReady, small);
+        Shadowed(new Rect(20, 116, 400, 24), "Паллет к отправке: " + Inventory.palletsReady, small);
+        if (ActController.Act >= 3 && GameConfig.horror)
+            Shadowed(new Rect(20, 164, 500, 24), "Пульс: " + Mathf.RoundToInt(Inventory.pulse) + "   V — отдышаться", small);
         if (Inventory.hasFlashlight)
-            Shadowed(new Rect(20, 188, 500, 24),
-                "Фонарик: " + Mathf.CeilToInt(Inventory.flashlightBattery) + "%   запас: " + Inventory.spareBatteries + "   (Q — вкл/выкл, T — сменить батарею)", small);
+            Shadowed(new Rect(20, 140, 500, 24),
+                "Фонарик " + Mathf.CeilToInt(Inventory.flashlightBattery) + "%   ·   Q — вкл/выкл   ·   T — батарейка", small);
 
         if (Time.time < messageUntil)
             Shadowed(new Rect(0, Screen.height * 0.75f, Screen.width, 44), message, centered);
@@ -184,15 +183,15 @@ public class Hud : MonoBehaviour
             if (pricing && box != null)
             {
                 int percent = Mathf.RoundToInt((price - box.basePrice) * 100f / box.basePrice);
-                GUI.Label(new Rect(r.x + 20, r.y + 14, r.width - 40, 34), "ТЕЛЕФОН: цена", phoneTitleStyle);
+                GUI.Label(new Rect(r.x + 20, r.y + 14, r.width - 40, 34), "ЦЕНА ПРИЁМКИ", phoneTitleStyle);
                 GUI.Label(new Rect(r.x + 20, r.y + 60, r.width - 40, 30),
                     box.lengthCm + " x " + box.widthCm + " x " + box.heightCm + " см", normal);
                 GUI.Label(new Rect(r.x + 20, r.y + 96, r.width - 40, 30), "Базовая: " + box.basePrice + " руб.", normal);
-                GUI.Label(new Rect(r.x + 20, r.y + 132, r.width - 40, 30), "Ваша: " + price + " руб. (+" + percent + "%)", phoneTitleStyle);
+                GUI.Label(new Rect(r.x + 20, r.y + 132, r.width - 40, 30), "Твоя: " + price + " руб. (+" + percent + "%)", phoneTitleStyle);
                 // Полоса-ползунок (двигается колесом мыши или стрелками)
                 GUI.HorizontalSlider(new Rect(r.x + 20, r.y + 180, r.width - 40, 20), price, box.basePrice, box.basePrice * 2);
-                GUI.Label(new Rect(r.x + 20, r.y + 215, r.width - 40, 24), "Колесо мыши или стрелки: цена", small);
-                GUI.Label(new Rect(r.x + 20, r.y + 242, r.width - 40, 24), "Enter: предложить селлеру", small);
+                GUI.Label(new Rect(r.x + 20, r.y + 215, r.width - 40, 24), "Колесо мыши или стрелки — цена", small);
+                GUI.Label(new Rect(r.x + 20, r.y + 242, r.width - 40, 24), "Enter — назвать цену селлеру", small);
             }
             else
             {

@@ -107,6 +107,15 @@ public static class GameplayFixer
 
         FixKeyChair();
         FixBorders();
+        AddHidingSpots();
+
+        // Невидимая стена перед воротами складов (зона «E — войти»): делаем проходимой
+        foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+            if (t.name == "DoorTrigger_Outside")
+            {
+                BoxCollider c = t.GetComponent<BoxCollider>();
+                if (c != null) c.isTrigger = true;
+            }
 
         // Машина у склада больше не нужна (если осталась от старой сборки склада)
         GameObject van = GameObject.Find("ParkedVan");
@@ -148,6 +157,42 @@ public static class GameplayFixer
         ne.transform.SetParent(e.transform.parent, false);
         ne.transform.localPosition = new Vector3(38.5f, 5f, 40f);
         ne.AddComponent<BoxCollider>().size = new Vector3(13f, 10f, 1f);
+    }
+
+    // Укрытия: за паллетами на складе и в мусорном контейнере под эстакадой
+    static void AddHidingSpots()
+    {
+        GameObject w = GameObject.Find("Warehouse");
+        Vector3 door = w != null ? w.transform.position : Vector3.zero;
+        string[] pallets = { "PalletBoxes", "PalletRolls", "PalletFBS" };
+        foreach (string n in pallets)
+        {
+            GameObject p = GameObject.Find(n);
+            if (p == null || p.GetComponent<HidingSpot>() != null) continue;
+            Vector3 away = p.transform.position - door; away.y = 0f; away.Normalize();
+            Interactable it = p.GetComponent<Interactable>();
+            if (it == null) it = p.AddComponent<Interactable>();
+            HidingSpot hs = p.AddComponent<HidingSpot>();
+            hs.eyeWorld = p.transform.position + away * 0.85f + Vector3.up * 0.95f;    // присел за паллетой
+            hs.lookAt = door;
+            hs.hidePrompt = "E — спрятаться за паллетой";
+        }
+
+        GameObject bin = GameObject.Find("TrashBin");
+        if (bin != null && bin.transform.Find("HideZone") == null)
+        {
+            // Отдельная зона у крышки: смотришь на крышку — залезть, на бок — выкинуть мешок
+            GameObject z = new GameObject("HideZone");
+            z.transform.SetParent(bin.transform, false);
+            z.transform.localPosition = new Vector3(0f, 1.28f, 0f);
+            BoxCollider c = z.AddComponent<BoxCollider>();
+            c.size = new Vector3(1.9f, 0.22f, 1.2f);
+            z.AddComponent<Interactable>();
+            HidingSpot hs = z.AddComponent<HidingSpot>();
+            hs.eyeWorld = bin.transform.TransformPoint(new Vector3(0.4f, 1.02f, 0.25f));   // под приоткрытой крышкой
+            hs.lookAt = bin.transform.TransformPoint(new Vector3(0.4f, 1f, 4f));
+            hs.hidePrompt = "E — залезть в контейнер";
+        }
     }
 
     static Material BinMaterial()

@@ -20,7 +20,7 @@ public class MopItem : MonoBehaviour
     {
         Inventory.hasMop = true;
         Sfx.Play("pickup", 0.8f);
-        Hud.Say("Швабра у вас. Уберите мусор у входа.");
+        Hud.Say("Швабра есть. Мусор по всему складу — собирай в мешок.");
         gameObject.SetActive(false);
     }
 }

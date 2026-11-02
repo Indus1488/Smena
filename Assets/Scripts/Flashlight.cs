@@ -50,7 +50,7 @@ public class Flashlight : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Q))
         {
             if (Inventory.flashlightBattery <= 0f)
-                Hud.Say("Батарея села. Нужен запас (T — сменить батарею).", 3f);
+                Hud.Say("Батарейка садится. T — поменять, если есть запас.", 3f);
             else
             {
                 on = !on;
@@ -73,7 +73,7 @@ public class Flashlight : MonoBehaviour
             {
                 Inventory.flashlightBattery = 0f;
                 on = false;
-                Hud.Say("Фонарик погас: батарея села.", 4f);
+                Hud.Say("Фонарик погас. Батарейка села.", 4f);
             }
         }
 
@@ -97,12 +97,12 @@ public class Flashlight : MonoBehaviour
     {
         if (Inventory.spareBatteries <= 0)
         {
-            Hud.Say("Запасных батарей нет.", 2f);
+            Hud.Say("Запасных батареек нет.", 2f);
             return;
         }
         Inventory.spareBatteries--;
         Inventory.flashlightBattery = 100f;
         Sfx.Play("battery", 0.8f);
-        Hud.Say("Батарея заменена.", 2f);
+        Hud.Say("Батарейка заменена.", 2f);
     }
 }

@@ -13,6 +13,8 @@ using UnityEngine;
 //   phone_msg      — новое сообщение               flashlight   — щелчок фонарика
 //   locked         — дверь заперта                 battery      — смена батареи
 //   lamp_break     — Володя разбивает лампу        trash_bag    — мешок в мусорку
+//   hide           — спрятаться в укрытие          monster_run  — Володя бежит в финале
+//   jumpscare      — крик скримера (если нет — играет finale_scream)
 //
 // Плюс звуки, которые уже подключены раньше: gate_creak, heartbeat, monster_steps,
 // finale_scream, gazelle_engine.

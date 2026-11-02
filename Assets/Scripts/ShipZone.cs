@@ -80,7 +80,7 @@ public class ShipZone : MonoBehaviour
 
         if (free < 0)
         {
-            Hud.Say("Зона заполнена. Нужна газель.");
+            Hud.Say("Зона заполнена. Вызывай газель.");
             return false;
         }
 

@@ -61,6 +61,14 @@ public class GazelleController : MonoBehaviour
         int n = ShipZone.Instance != null ? ShipZone.Instance.ClearAll() : 0;
         Inventory.palletsReady = 0;
         if (n > 0) Hud.AddMoney(n * GameConfig.payPerPallet);
+        Inventory.palletsShipped += n;
+        if (n > 0)
+        {
+            int left = GameConfig.quotaPallets - Inventory.palletsShipped;
+            PhoneUI.AddMessage("Начальник", left > 0
+                ? "Норма: " + Inventory.palletsShipped + " из " + GameConfig.quotaPallets + " паллет. Осталось " + left + "."
+                : "Норма выполнена (" + Inventory.palletsShipped + "/" + GameConfig.quotaPallets + "). Премия будет. Можешь не рвать жилы.");
+        }
         PhoneUI.AddMessage("Газель", "Забрал паллет: " + n + ". Оплата: " + (n * GameConfig.payPerPallet) + " руб. Хорошей смены.");
 
         yield return new WaitForSeconds(1.5f);

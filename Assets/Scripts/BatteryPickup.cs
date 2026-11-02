@@ -17,7 +17,7 @@ public class BatteryPickup : MonoBehaviour
     {
         Inventory.spareBatteries++;
         Sfx.Play("pickup", 0.8f);
-        Hud.Say("Аккумулятор взят. Запас: " + Inventory.spareBatteries + ". T — сменить батарею фонарика.", 4f);
+        Hud.Say("Батарейка. Запас: " + Inventory.spareBatteries + ". T — поменять в фонарике.", 4f);
         Destroy(gameObject);
     }
 }

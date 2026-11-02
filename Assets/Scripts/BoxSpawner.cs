@@ -31,7 +31,7 @@ public class BoxSpawner : MonoBehaviour
             started = true;
             SellersStarted = true;
             if (!GameConfig.skipPrologue && Inventory.trashTotal > 0)
-                PhoneUI.AddMessage("Начальник", "Селлеры уже подъезжают. Начинай.");
+                PhoneUI.AddMessage("Начальник", "Первые селлеры подъехали. Начинай.");
             Invoke("SpawnBox", firstDelay);
         }
 
@@ -85,6 +85,6 @@ public class BoxSpawner : MonoBehaviour
 
         current = b;
         Hud.HidePhone();
-        Hud.Say("Приехал селлер с коробкой.");
+        Hud.Say("Приехал селлер. Коробка у входа.");
     }
 }

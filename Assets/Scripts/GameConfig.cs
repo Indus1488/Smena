@@ -9,6 +9,19 @@ public static class GameConfig
     // =====================================================================
     public static bool release = false;
 
+    // =====================================================================
+    // ХОРРОР-ЧАСТЬ
+    // true  — как задумано: Володя, пульс и дыхание, укрытия, скример в финале.
+    // false — спокойная версия: только работа и темнота, без Володи, пульса и скримера.
+    // =====================================================================
+    // Переключается в Unity: Smena → Режим игры. Хранится в PlayerPrefs; по умолчанию — хоррор.
+    public const string HorrorKey = "gameHorror";
+    public static bool horror
+    {
+        get { return UnityEngine.PlayerPrefs.GetInt(HorrorKey, 1) == 1; }
+        set { UnityEngine.PlayerPrefs.SetInt(HorrorKey, value ? 1 : 0); UnityEngine.PlayerPrefs.Save(); }
+    }
+
     // ---------- Режим разработки (работают только при release = false) ----------
     const bool devFastTime = true;     // быстрое время (удобно тестировать акт 2)
     const bool devSkipPrologue = false;   // пропустить уборку мусора у входа
@@ -38,6 +51,14 @@ public static class GameConfig
     // Сколько коробок помещается на паллету и сколько платят за каждую паллету, которую увезла газель
     public static int palletCapacity = 6;
     public static int payPerPallet = 600;
+
+    // Норма смены: сколько паллет должна увезти газель до 20:00. Выполнил — премия, нет — штраф (в итогах смены)
+    public static int quotaPallets = 2;
+    public static int quotaBonus = 1500;
+    public static int quotaFine = 1000;
+
+    // Укрытия: с каким пульсом Володя услышит сердце, даже если вы спрятались (и он совсем рядом)
+    public static float hidePulseLimit = 110f;
 
     // Мусор: сколько кусков влезает в мешок, сколько появляется после готовой коробки (1..N), максимум на полу
     public static int trashBagSize = 8;

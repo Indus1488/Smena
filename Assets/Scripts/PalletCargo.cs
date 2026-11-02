@@ -191,7 +191,7 @@ public class PalletCargo : MonoBehaviour
                 pumps++;
                 Sfx.Play("jack_pump", 0.7f);
                 transform.position = liftBase + Vector3.up * (0.1f * pumps / pumpsNeeded);
-                Hud.Say("Качайте мышью вверх-вниз: " + pumps + "/" + pumpsNeeded, 30f);
+                Hud.Say("Качай рохлю: мышь вверх-вниз " + pumps + "/" + pumpsNeeded, 30f);
                 if (pumps >= pumpsNeeded) PickUp();
             }
             if (!pumpUp && pumpTravel < 0f) pumpTravel = 0f;   // в начале качка лишнее движение вниз не копится
@@ -225,7 +225,7 @@ public class PalletCargo : MonoBehaviour
                 it.prompt = Inventory.hasJack ? "E — поднять рохлей" : "Паллета готова. Нужна рохля";
                 break;
             case State.Lifting:
-                it.prompt = "Качайте мышью вверх-вниз";
+                it.prompt = "Качай рохлю: мышь вверх-вниз";
                 break;
             case State.Delivered:
                 it.prompt = "Паллета ждёт газель" + hint;
@@ -243,7 +243,7 @@ public class PalletCargo : MonoBehaviour
             case State.Loading:
                 if (Inventory.boxesReady <= 0)
                 {
-                    Hud.Say("Нет готовых коробок. Сначала обработайте заказы.");
+                    Hud.Say("Готовых коробок нет. Сначала прими заказы.");
                     return;
                 }
                 Inventory.boxesReady--;
@@ -253,7 +253,7 @@ public class PalletCargo : MonoBehaviour
                 if (count >= capacity)
                 {
                     state = State.Full;
-                    Hud.Say("Паллета заполнена. Обмотайте её плёнкой.");
+                    Hud.Say("Паллета заполнена. Обмотай её плёнкой.");
                 }
                 else
                 {
@@ -271,7 +271,7 @@ public class PalletCargo : MonoBehaviour
             case State.Wrapped:
                 if (!Inventory.hasJack)
                 {
-                    Hud.Say("Нужна рохля: жёлтая рохля стоит рядом.");
+                    Hud.Say("Нужна рохля. Жёлтая стоит у места сборки.");
                     return;
                 }
                 if (IsBusy()) return;
@@ -289,7 +289,7 @@ public class PalletCargo : MonoBehaviour
         state = State.Wrapped;
         float ch = CargoHeight();
         Part("Film", new Vector3(0, 0.15f + ch / 2f, 0), new Vector3(1.22f, ch, 0.82f), filmMat);
-        Hud.Say("Паллета обмотана. Возьмите рохлю.");
+        Hud.Say("Паллета обмотана. Бери рохлю.");
     }
 
     // ---------- Подъём, перевозка, постановка ----------
@@ -314,7 +314,7 @@ public class PalletCargo : MonoBehaviour
         lookLock = pl != null ? pl.GetComponent<PlayerController>() : null;
         if (lookLock != null) lookLock.enabled = false;   // мышь качает рохлю, а не крутит камеру
 
-        Hud.Say("Качайте мышью вверх-вниз: 0/" + pumpsNeeded, 30f);
+        Hud.Say("Качай рохлю: мышь вверх-вниз 0/" + pumpsNeeded, 30f);
     }
 
     // Паллета на рохле: едет перед игроком, скорость падает вдвое
@@ -344,7 +344,7 @@ public class PalletCargo : MonoBehaviour
             speedBefore = pc.speed;
             pc.speed = speedBefore * 0.5f;
         }
-        Hud.Say("Паллета на рохле. G — поставить здесь. E в жёлтой зоне — отгрузка.", 7f);
+        Hud.Say("Паллета на рохле. Вези в жёлтую зону во дворе (E). G — поставить здесь.", 7f);
     }
 
     // G: поставить паллету там, где вы сейчас её везёте

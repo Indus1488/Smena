@@ -8,6 +8,11 @@ public class PlayerController : MonoBehaviour
     public float mouseSensitivity = 2f;
     public float gravity = -20f;
 
+    public static bool MoveLocked;   // в укрытии: смотреть можно, ходить нельзя
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatic() { MoveLocked = false; }
+
     CharacterController cc;
     float xRot;
     float yVel;
@@ -26,6 +31,8 @@ public class PlayerController : MonoBehaviour
         xRot = Mathf.Clamp(xRot - my, -85f, 85f);
         cameraTransform.localRotation = Quaternion.Euler(xRot, 0, 0);
         transform.Rotate(0, mx, 0);
+
+        if (MoveLocked) return;
 
         // Ходьба
         Vector3 move = transform.right * Input.GetAxis("Horizontal")

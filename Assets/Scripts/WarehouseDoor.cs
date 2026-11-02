@@ -51,7 +51,7 @@ public class WarehouseDoor : MonoBehaviour
         if (Locked())
         {
             Sfx.Play("locked", 0.9f);
-            Hud.Say("Дверь заперта. Ключ где-то рядом, поищите на улице.");
+            Hud.Say("Заперто. Ключ должен быть где-то на улице.");
             return;
         }
         Sfx.Play("door_open", 0.9f);

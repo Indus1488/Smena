@@ -16,7 +16,7 @@ public class TrashBin : MonoBehaviour
 
     void Update()
     {
-        it.prompt = Inventory.trashBag > 0 ? "E — выкинуть мешок" : "Мусорка";
+        it.prompt = Inventory.trashBag > 0 ? "E — выкинуть мешок" : "Мусорный контейнер";
     }
 
     void Throw()
@@ -24,6 +24,6 @@ public class TrashBin : MonoBehaviour
         if (Inventory.trashBag <= 0) return;
         Inventory.trashBag = 0;
         Sfx.PlayAt("trash_bag", transform.position, 1f);
-        Hud.Say("Мешок выкинут.", 2f);
+        Hud.Say("Мешок в контейнере.", 2f);
     }
 }

@@ -96,7 +96,7 @@ public class GameMenus : MonoBehaviour
     // ---------- Рисование ----------
     void MakeStyles()
     {
-        titleS = new GUIStyle(GUI.skin.label);
+        titleS = new GUIStyle(UITheme.Label());
         titleS.fontSize = 72;
         titleS.fontStyle = FontStyle.Bold;
         titleS.alignment = TextAnchor.MiddleCenter;
@@ -107,10 +107,10 @@ public class GameMenus : MonoBehaviour
         subS.fontStyle = FontStyle.Normal;
         subS.normal.textColor = new Color(0.65f, 0.65f, 0.7f);
 
-        buttonS = new GUIStyle(GUI.skin.button);
+        buttonS = new GUIStyle(UITheme.Button());
         buttonS.fontSize = 26;
 
-        labelS = new GUIStyle(GUI.skin.label);
+        labelS = new GUIStyle(UITheme.Label());
         labelS.fontSize = 22;
         labelS.normal.textColor = Color.white;
     }
@@ -149,7 +149,7 @@ public class GameMenus : MonoBehaviour
         else
         {
             GUI.Label(new Rect(0, y, UnityEngine.Screen.width, 90), "НАСТРОЙКИ", titleS);
-            y += 150;
+            y += 100;
 
             GUI.Label(new Rect(x, y, w, 30), "Громкость: " + Mathf.RoundToInt(volume * 100f) + "%", labelS);
             float v = GUI.HorizontalSlider(new Rect(x, y + 38, w, 24), volume, 0f, 1f);
@@ -166,13 +166,18 @@ public class GameMenus : MonoBehaviour
                 Apply();
             }
 
+            // Яркость
+            GUI.Label(new Rect(x, y + 384, w, 30), "Яркость: " + (Brightness.Value >= 0 ? "+" : "") + Mathf.RoundToInt(Brightness.Value * 100f) + "%", labelS);
+            float br = GUI.HorizontalSlider(new Rect(x, y + 422, w, 24), Brightness.Value, -1f, 1f);
+            if (!Mathf.Approximately(br, Brightness.Value)) { Brightness.Value = br; PlayerPrefs.Save(); }
+
             // Графика: нажатие переключает Низкая → Обычная → Высокая; VHS включается отдельно
             if (GUI.Button(new Rect(x, y + 170, w, 52), "Графика: " + VisualOptions.QualityNames[VisualOptions.Quality], buttonS))
                 VisualOptions.Quality = (VisualOptions.Quality + 1) % VisualOptions.QualityNames.Length;
             if (GUI.Button(new Rect(x, y + 232, w, 52), "VHS: " + (VisualOptions.Vhs ? "вкл" : "выкл"), buttonS))
                 VisualOptions.Vhs = !VisualOptions.Vhs;
 
-            if (GUI.Button(new Rect(x, y + 310, w, 64), "Назад (Esc)", buttonS)) screen = backTo;
+            if (GUI.Button(new Rect(x, y + 470, w, 64), "Назад (Esc)", buttonS)) screen = backTo;
         }
     }
 

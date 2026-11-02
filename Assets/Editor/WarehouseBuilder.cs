@@ -961,7 +961,9 @@ public static class WarehouseBuilder
         GameObject go = new GameObject(name);
         go.transform.SetParent(root, false);
         go.transform.localPosition = pos;
-        go.AddComponent<BoxCollider>().size = size;
+        BoxCollider bc = go.AddComponent<BoxCollider>();
+        bc.size = size;
+        bc.isTrigger = name.Contains("Outside");   // снаружи — не стена: сквозь неё можно пройти, E работает
 
         Interactable it = go.AddComponent<Interactable>();
         it.prompt = prompt;

@@ -22,6 +22,7 @@ public static class Inventory
     public static int palletsReady;  // паллет в зоне отгрузки, ждут газель
     public static int palletStock;   // купленные паллеты, которых ещё нет на месте сборки (лежат стопкой во дворе)
     public static int trashBag;      // сколько мусора в мешке
+    public static int palletsShipped;   // сколько паллет увезла газель (для нормы смены)
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void Reset()
@@ -42,5 +43,6 @@ public static class Inventory
         palletsReady = 0;
         palletStock = 0;
         trashBag = 0;
+        palletsShipped = 0;
     }
 }

@@ -40,11 +40,11 @@ public class CenterText : MonoBehaviour
 
         if (style == null)
         {
-            style = new GUIStyle(GUI.skin.label);
+            style = new GUIStyle(UITheme.Label());
             style.fontSize = 56;
             style.fontStyle = FontStyle.Bold;
             style.alignment = TextAnchor.MiddleCenter;
-            style.normal.textColor = Color.white;
+            style.normal.textColor = UITheme.Text;
         }
         GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text, style);
     }

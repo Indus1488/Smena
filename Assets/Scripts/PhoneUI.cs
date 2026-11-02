@@ -59,8 +59,8 @@ public class PhoneUI : MonoBehaviour
     {
         // Сообщения при старте смены (самое важное лежит внизу списка, потому что новые сверху)
         AddMessage("Инструктаж FBO", "На коробке две этикетки с QR. Номер поставки на обеих должен совпадать с заказом. Совпало — принимаешь. Не совпало — не принимай и сообщи селлеру.");
-        AddMessage("Начальник", "Готовые коробки клади на паллету, обматывай плёнкой, вези рохлей в жёлтую зону на улице. Газель вызывай в приложении «Газель» (1000 руб.). Стартовая паллета одна, остальные покупай в магазине.");
-        AddMessage("Начальник", "Смена с 16:00 до 20:00. Приезжают селлеры. Меряй коробку рулеткой, назначай цену на телефоне. После сделки: FBS — клей стикеры на доску, FBO — проверь QR на коробке.");
+        AddMessage("Начальник", "Готовые коробки — на паллету, " + GameConfig.palletCapacity + " штук. Обмотай плёнкой и вези рохлей в жёлтую зону во дворе. Газель вызывай в приложении (" + GameConfig.priceGazelle + " руб.), за каждую паллету она платит " + GameConfig.payPerPallet + ". Пустые паллеты покупай в магазине, их сгружают стопкой во дворе.");
+        AddMessage("Начальник", "Смена с 16:00 до 20:00. Сначала прибери склад: швабра у левой стены, мешок — в контейнер под эстакадой. Потом селлеры: меряй коробку рулеткой, называй цену в телефоне. FBS — стикеры на доску, FBO — проверь QR. Сильно не задирай цену: обидятся.");
     }
 
     void Update()
@@ -113,7 +113,7 @@ public class PhoneUI : MonoBehaviour
         Hud.AddMoney(-GameConfig.pricePallet);
         Inventory.palletStock++;
         Sfx.Play("money", 0.7f);
-        Hud.Say("Куплена паллета (-" + GameConfig.pricePallet + " руб.). Она во дворе.", 3f);
+        Hud.Say("Паллета куплена (-" + GameConfig.pricePallet + " руб.). Её сгрузили во дворе.", 3f);
     }
 
     void BuyBattery()
@@ -122,7 +122,7 @@ public class PhoneUI : MonoBehaviour
         Hud.AddMoney(-GameConfig.priceBattery);
         Inventory.spareBatteries++;
         Sfx.Play("money", 0.7f);
-        Hud.Say("Куплена батарея (-" + GameConfig.priceBattery + " руб.)", 3f);
+        Hud.Say("Батарейка куплена (-" + GameConfig.priceBattery + " руб.)", 3f);
     }
 
     void CallGazelle()
@@ -149,28 +149,28 @@ public class PhoneUI : MonoBehaviour
     // ---------- Рисование ----------
     void MakeStyles()
     {
-        titleS = new GUIStyle(GUI.skin.label);
+        titleS = new GUIStyle(UITheme.Label());
         titleS.fontSize = 26;
         titleS.fontStyle = FontStyle.Bold;
-        titleS.normal.textColor = Color.white;
+        titleS.normal.textColor = UITheme.Text;
 
         rightS = new GUIStyle(titleS);
         rightS.alignment = TextAnchor.MiddleRight;
         rightS.fontSize = 22;
         rightS.fontStyle = FontStyle.Normal;
 
-        normalS = new GUIStyle(GUI.skin.label);
+        normalS = new GUIStyle(UITheme.Label());
         normalS.fontSize = 20;
-        normalS.normal.textColor = Color.white;
+        normalS.normal.textColor = UITheme.Text;
 
         smallS = new GUIStyle(normalS);
         smallS.fontSize = 16;
-        smallS.normal.textColor = new Color(0.7f, 0.72f, 0.78f);
+        smallS.normal.textColor = UITheme.Dim;
 
-        buttonS = new GUIStyle(GUI.skin.button);
+        buttonS = new GUIStyle(UITheme.Button());
         buttonS.fontSize = 22;
 
-        rowS = new GUIStyle(GUI.skin.button);
+        rowS = new GUIStyle(UITheme.Button());
         rowS.fontSize = 18;
         rowS.alignment = TextAnchor.MiddleLeft;
         rowS.wordWrap = true;
@@ -315,19 +315,19 @@ public class PhoneUI : MonoBehaviour
         if (GUI.Button(new Rect(x, y + 110f, w, 52f), "Купить паллету", buttonS)) BuyPallet();
         GUI.enabled = true;
 
-        GUI.Label(new Rect(x, y + 190f, w, 30f), "Батарея для фонарика (в запасе: " + Inventory.spareBatteries + ")", normalS);
+        GUI.Label(new Rect(x, y + 190f, w, 30f), "Батарейка для фонарика (в запасе: " + Inventory.spareBatteries + ")", normalS);
         GUI.Label(new Rect(x, y + 220f, w, 26f), GameConfig.priceBattery + " руб.", smallS);
         GUI.enabled = Hud.money >= GameConfig.priceBattery;
-        if (GUI.Button(new Rect(x, y + 250f, w, 52f), "Купить батарею", buttonS)) BuyBattery();
+        if (GUI.Button(new Rect(x, y + 250f, w, 52f), "Купить батарейку", buttonS)) BuyBattery();
         GUI.enabled = true;
 
-        GUI.Label(new Rect(x, y + 330f, w, 60f), "Стартовая паллета одна. Остальные покупаются.", smallS);
+        GUI.Label(new Rect(x, y + 330f, w, 60f), "Купленные паллеты сгружают стопкой во дворе.", smallS);
     }
 
     void DrawGazelle(float x, float y, float w)
     {
         GUI.Label(new Rect(x, y, w, 34f), "Газель", titleS);
-        GUI.Label(new Rect(x, y + 50f, w, 60f), "Приедет и заберёт все паллеты из жёлтой зоны.", wrapS);
+        GUI.Label(new Rect(x, y + 50f, w, 60f), "Заберёт все паллеты из жёлтой зоны и заплатит " + GameConfig.payPerPallet + " руб. за каждую.", wrapS);
         GUI.Label(new Rect(x, y + 120f, w, 28f), "Цена вызова: " + GameConfig.priceGazelle + " руб.", normalS);
         GUI.Label(new Rect(x, y + 152f, w, 28f), "Паллет в зоне: " + Inventory.palletsReady, normalS);
 
@@ -337,7 +337,7 @@ public class PhoneUI : MonoBehaviour
         GUI.enabled = true;
 
         string status = GazelleController.Busy ? "Газель в пути…"
-            : (Inventory.palletsReady <= 0 ? "Сначала поставьте паллету в жёлтую зону."
+            : (Inventory.palletsReady <= 0 ? "Сначала поставь паллету в жёлтую зону."
             : (Hud.money < GameConfig.priceGazelle ? "Не хватает денег." : "Можно вызывать."));
         GUI.Label(new Rect(x, y + 270f, w, 60f), status, smallS);
     }
