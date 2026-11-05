@@ -646,7 +646,7 @@ public static class WarehouseBuilder
         NoCol(Cube("RailBack", g, new Vector3(0, 4.2f, 3.05f), new Vector3(8.2f, 0.06f, 0.06f), gantryMat));
 
         // Мусорка под эстакадой: сюда выкидывается мусорный мешок
-        Extras.TrashBin(g, Vector3.zero, 0f, binGreen);
+        TrashBinAndLamps.TrashBin(g, Vector3.zero, 0f, binGreen);
 
         // Центральный склад. Он ПОЛЫЙ: в 18:00 ворота поднимаются, и внутри видны тёмная глубина и надпись.
         Transform c = Group("CentralWarehouse", n, Vector3.zero);
@@ -687,7 +687,7 @@ public static class WarehouseBuilder
         NoCol(Cube("Inscription", c, new Vector3(0, 3.2f, faceZ - 7.78f), new Vector3(6f, 1.2f, 0.04f), tape));
 
         // 4 лампы на фасаде: стоят с начала, загораются в 17:30, в 18:00 их разбивает Володя
-        Extras.FacadeLamps(c, lampMat, gantryMat);
+        TrashBinAndLamps.FacadeLamps(c, lampMat, gantryMat);
 
         // Красно-белая труба на крыше
         for (int i = 0; i < 6; i++)

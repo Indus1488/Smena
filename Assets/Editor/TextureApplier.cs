@@ -64,7 +64,7 @@ public static class TextureApplier
             if (tex == null) { missing++; continue; }
 
             mat.mainTexture = tex;
-            mat.mainTextureScale = new Vector2(1f / m.meters, 1f / m.meters);   // повтор в метрах (см. WorldUV.cs)
+            mat.mainTextureScale = new Vector2(1f / m.meters, 1f / m.meters);   // повтор в метрах (см. TextureNoStretch.cs)
             mat.color = m.tint;
             if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0f);
             EditorUtility.SetDirty(mat);

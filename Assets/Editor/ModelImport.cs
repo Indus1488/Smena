@@ -23,8 +23,9 @@ public class ModelImport : AssetPostprocessor
         mi.importCameras = false;
         mi.importLights = false;
         mi.addCollider = false;
-        mi.isReadable = false;
-        if (!assetPath.ToLowerInvariant().Contains("volodya"))
+        // Руки: скрипт вырезает из модели всё, кроме предплечий и кистей, — для этого меш должен быть читаемым
+        mi.isReadable = assetPath.ToLowerInvariant().Contains("player_arms");
+        if (!assetPath.ToLowerInvariant().Contains("volodya") && !assetPath.ToLowerInvariant().Contains("player_arms"))
         {
             mi.importAnimation = false;
         }
@@ -36,11 +37,36 @@ public class ModelImport : AssetPostprocessor
         }
     }
 
+    // Анимации Володи (Resources/Models/volodya/anims): ходьба, бег, стойка и осмотр — по кругу;
+    // тело остаётся на месте (двигает Володю код, а не анимация), без разворотов и подпрыгиваний корня.
+    void OnPreprocessAnimation()
+    {
+        string p = assetPath.Replace('\\', '/').ToLowerInvariant();
+        if (!p.Contains("/volodya/anims/")) return;
+        ModelImporter mi = (ModelImporter)assetImporter;
+        string n = System.IO.Path.GetFileNameWithoutExtension(p);
+        bool loop = n == "idle" || n == "walk" || n == "run" || n == "look";
+        ModelImporterClipAnimation[] clips = mi.defaultClipAnimations;
+        for (int i = 0; i < clips.Length; i++)
+        {
+            clips[i].name = n;
+            clips[i].loopTime = loop;
+            clips[i].loopPose = loop;
+            clips[i].lockRootRotation = true;
+            clips[i].lockRootHeightY = true;
+            clips[i].lockRootPositionXZ = true;
+            clips[i].keepOriginalOrientation = true;
+            clips[i].keepOriginalPositionY = true;
+            clips[i].keepOriginalPositionXZ = true;
+        }
+        mi.clipAnimations = clips;
+    }
+
     void OnPreprocessTexture()
     {
         if (!InModels(assetPath)) return;
         TextureImporter ti = (TextureImporter)assetImporter;
-        ti.maxTextureSize = 1024;
+        ti.maxTextureSize = assetPath.Contains("player_arms") ? 2048 : 1024;   // руки видно вплотную
         string n = Path.GetFileNameWithoutExtension(assetPath).ToLowerInvariant();
         if (n.Contains("_normal")) ti.textureType = TextureImporterType.NormalMap;
     }
@@ -99,6 +125,20 @@ public class ModelImport : AssetPostprocessor
         if (EditorPrefs.GetInt("SmenaModelImportV", 0) >= 1) return;
         EditorPrefs.SetInt("SmenaModelImportV", 1);
         EditorApplication.delayCall += ReimportAll;
+    }
+
+    // Руки стали читаемыми — один раз переимпортируем только их
+    [InitializeOnLoadMethod]
+    static void ArmsReadableOnce()
+    {
+        if (EditorPrefs.GetInt("SmenaArmsReadable", 0) >= 1) return;
+        EditorPrefs.SetInt("SmenaArmsReadable", 1);
+        EditorApplication.delayCall += () =>
+        {
+            foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { Folder + "/player_arms" }))
+                AssetDatabase.ImportAsset(AssetDatabase.GUIDToAssetPath(guid), ImportAssetOptions.ForceUpdate);
+            Debug.Log("[Hands] модель рук переимпортирована (читаемый меш).");
+        };
     }
 
     [MenuItem("Smena/Переимпортировать модели")]
